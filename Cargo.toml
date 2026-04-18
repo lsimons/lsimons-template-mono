@@ -1,0 +1,23 @@
+[workspace]
+resolver = "2"
+members = ["packages/lsimons-$project-rs"]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.85"
+authors = ["lsimons"]
+license-file = "LICENSE.md"
+readme = "README.md"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

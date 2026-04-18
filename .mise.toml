@@ -1,0 +1,12 @@
+# Optional toolchain pin. If you install `mise` (https://mise.jdx.dev/),
+# running `mise install` in this repo will install the exact versions below.
+# Each language also has its own native pin (.nvmrc, rust-toolchain.toml,
+# go.mod's `go` directive, pyproject.toml's `requires-python`), so mise is
+# not required.
+
+[tools]
+node = "24"
+pnpm = "10"
+python = "3.14"
+rust = "1.95"
+go = "1.26"

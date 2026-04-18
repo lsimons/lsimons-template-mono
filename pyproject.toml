@@ -1,0 +1,43 @@
+# Root pyproject.toml acts as the uv workspace root + shared dev-tool config.
+# Each member package under packages/*-py has its own pyproject.toml for
+# build metadata (name, version, dependencies). Shared tools (ruff,
+# basedpyright, pytest) are configured here so every member inherits.
+
+[project]
+name = "lsimons-$project-workspace"
+version = "0.0.0"
+description = "Workspace root for lsimons-$project"
+requires-python = ">=3.14"
+# Root package has no runtime deps; members declare their own.
+
+[tool.uv.workspace]
+members = ["packages/*-py"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.8.0",
+    "basedpyright>=1.22.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+extend-exclude = ["packages/*-ts", "packages/*-go", "packages/*-rs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B", "SIM"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["lsimons_$project"]
+
+[tool.basedpyright]
+pythonVersion = "3.14"
+typeCheckingMode = "strict"
+include = ["packages/*-py/src", "packages/*-py/tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["packages"]
+addopts = "-v"
+python_files = ["test_*.py", "*_test.py"]

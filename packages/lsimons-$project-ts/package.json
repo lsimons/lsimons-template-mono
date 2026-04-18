@@ -1,0 +1,14 @@
+{
+    "name": "lsimons-$project-ts",
+    "version": "0.1.0",
+    "description": "$shortDescription (TypeScript)",
+    "type": "module",
+    "private": true,
+    "main": "./src/index.ts",
+    "scripts": {
+        "typecheck": "tsc --noEmit",
+        "test": "vitest run --coverage",
+        "test:watch": "vitest",
+        "build": "tsc -p tsconfig.build.json"
+    }
+}
