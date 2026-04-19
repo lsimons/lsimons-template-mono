@@ -1,12 +1,168 @@
-# Optional toolchain pin. If you install `mise` (https://mise.jdx.dev/),
-# running `mise install` in this repo will install the exact versions below.
-# Each language also has its own native pin (.nvmrc, rust-toolchain.toml,
-# go.mod's `go` directive, pyproject.toml's `requires-python`), so mise is
-# not required.
+# mise: https://mise.jdx.dev/
+#
+# One-stop toolchain + task runner for this polyglot monorepo.
+# `mise install` installs everything under [tools]; `mise run <task>`
+# dispatches to the native toolchain per language.
+#
+# Native per-language pin files are kept alongside this one (.nvmrc,
+# rust-toolchain.toml, go.mod's `go` directive, pyproject.toml's
+# `requires-python`) so contributors without mise can still use the native
+# tools directly. If both are present, they must agree.
 
 [tools]
 node = "24"
 pnpm = "10"
 python = "3.14"
-rust = "1.95"
+rust = "latest"
 go = "1.26"
+uv = "latest"
+
+# Project-scoped env: load an optional .env if present (fnox-generated
+# or hand-written). Keep secrets out of git; use fnox for op:// refs.
+[env]
+_.file = { path = ".env", optional = true }
+
+# ---------- Top-level fan-outs ----------
+[tasks.install]
+description = "Install all language dependencies"
+depends = ["py:install", "ts:install"]
+
+[tasks.lint]
+description = "Run all linters"
+depends = ["py:lint", "ts:lint", "go:lint", "rs:lint"]
+
+[tasks.format]
+description = "Auto-format all languages"
+depends = ["py:format", "ts:format", "go:format", "rs:format"]
+
+[tasks.typecheck]
+description = "Run type checkers (py + ts)"
+depends = ["py:typecheck", "ts:typecheck"]
+
+[tasks.test]
+description = "Run all tests"
+depends = ["py:test", "ts:test", "go:test", "rs:test"]
+
+[tasks.build]
+description = "Build all buildable targets"
+depends = ["ts:build", "go:build", "rs:build"]
+
+[tasks.ci]
+description = "Full CI gate: lint + typecheck + test + build"
+depends = ["lint", "typecheck", "test", "build"]
+
+[tasks.clean]
+description = "Remove all build output and installed deps"
+run = """
+rm -rf node_modules packages/*/node_modules
+rm -rf .venv packages/*/.venv
+rm -rf target
+find packages -name 'bin' -maxdepth 2 -type d -exec rm -rf {} +
+find packages -name 'dist' -maxdepth 2 -type d -exec rm -rf {} +
+find packages -name '*.tsbuildinfo' -delete
+find . -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
+"""
+
+# ---------- Python ----------
+[tasks."py:install"]
+description = "uv sync"
+run = "uv sync --all-groups --all-packages"
+
+[tasks."py:lint"]
+run = ["uv run ruff check .", "uv run ruff format --check ."]
+
+[tasks."py:format"]
+run = ["uv run ruff format .", "uv run ruff check --fix ."]
+
+[tasks."py:typecheck"]
+run = "uv run basedpyright"
+
+[tasks."py:test"]
+run = "uv run pytest"
+
+# ---------- TypeScript ----------
+[tasks."ts:install"]
+description = "pnpm install"
+run = "pnpm install"
+
+[tasks."ts:lint"]
+# biome check runs from the workspace root (root package.json "lint" script)
+run = "pnpm lint"
+
+[tasks."ts:format"]
+# biome format runs from the workspace root
+run = "pnpm format"
+
+[tasks."ts:typecheck"]
+run = "pnpm -r --parallel typecheck"
+
+[tasks."ts:test"]
+run = "pnpm -r --parallel test"
+
+[tasks."ts:build"]
+run = "pnpm -r --parallel build"
+
+# ---------- Go ----------
+# go.work coordinates the modules, but most `go` subcommands still want
+# to be run from inside a module directory; iterate over packages/*-go
+# so adding a new Go module is just "drop it in + add a `use` line".
+[tasks."go:lint"]
+run = """
+set -e
+for m in packages/*-go; do
+  [ -d "$m" ] || continue
+  echo "--- golangci-lint $m"
+  (cd "$m" && golangci-lint run ./...)
+  out=$(cd "$m" && gofmt -l .)
+  if [ -n "$out" ]; then
+    echo "Unformatted Go files in $m:"
+    echo "$out"
+    exit 1
+  fi
+done
+"""
+
+[tasks."go:format"]
+run = """
+set -e
+for m in packages/*-go; do
+  [ -d "$m" ] || continue
+  (cd "$m" && gofumpt -w .)
+done
+"""
+
+[tasks."go:test"]
+run = """
+set -e
+for m in packages/*-go; do
+  [ -d "$m" ] || continue
+  echo "--- go test $m"
+  (cd "$m" && go test -race -cover ./...)
+done
+"""
+
+[tasks."go:build"]
+run = """
+set -e
+for m in packages/*-go; do
+  [ -d "$m" ] || continue
+  echo "--- go build $m"
+  (cd "$m" && go build ./...)
+done
+"""
+
+# ---------- Rust ----------
+[tasks."rs:lint"]
+run = [
+    "cargo fmt --all --check",
+    "cargo clippy --workspace --all-targets --all-features -- -D warnings",
+]
+
+[tasks."rs:format"]
+run = "cargo fmt --all"
+
+[tasks."rs:test"]
+run = "cargo test --workspace --all-targets"
+
+[tasks."rs:build"]
+run = "cargo build --workspace --all-targets"

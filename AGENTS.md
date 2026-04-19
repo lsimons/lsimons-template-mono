@@ -5,31 +5,40 @@
 Brief project description.
 
 This repo is a polyglot monorepo: each language uses its **native workspace**
-(uv / pnpm / `go.work` / Cargo workspace). A top-level `Makefile` wraps the
-per-language commands for convenience — see `Makefile` for the exact
-commands each target runs.
+(uv / pnpm / `go.work` / Cargo workspace). [`mise`](https://mise.jdx.dev/)
+is the top-level entry point — it pins every toolchain version and exposes
+every repo command as a task (see `.mise.toml`). `docs/spec/002-mise-
+adoption.md` has the full rationale.
 
 ## Quick Reference
 
-- **Install all**: `make install` (runs `uv sync` + `pnpm install`)
-- **Lint all**: `make lint`
-- **Test all**: `make test`
-- **Typecheck all**: `make typecheck`
-- **Format all**: `make format`
+First time in a fresh clone: `mise install` (downloads + pins the
+toolchain), then `mise run install` (uv sync + pnpm install).
 
-Per-language commands work standalone too:
+- **Install all deps**: `mise run install`
+- **Lint all**: `mise run lint`
+- **Test all**: `mise run test`
+- **Typecheck all**: `mise run typecheck`
+- **Format all**: `mise run format`
+- **Full CI gate**: `mise run ci`
+
+Tasks are namespaced `<lang>:<verb>` so you can fan out at any
+granularity — e.g. `mise run py:lint`, `mise run rs:test`.
+
+Per-language native commands still work standalone when mise isn't in
+the way:
 
 | Language   | Install             | Lint                                                 | Typecheck                  | Test                                       |
 |------------|---------------------|------------------------------------------------------|----------------------------|--------------------------------------------|
 | Python     | `uv sync`           | `uv run ruff check . && uv run ruff format --check .`| `uv run basedpyright`      | `uv run pytest`                            |
-| TypeScript | `pnpm install`      | `pnpm lint`                                          | `pnpm typecheck`           | `pnpm test`                                |
+| TypeScript | `pnpm install`      | `pnpm -r lint`                                       | `pnpm -r typecheck`        | `pnpm -r test`                             |
 | Go         | (none)              | `golangci-lint run ./...` (in each module)           | `go vet ./...`             | `go test -race -cover ./...`               |
 | Rust       | (none)              | `cargo fmt --all --check && cargo clippy --workspace --all-targets --all-features -- -D warnings` | (via clippy) | `cargo test --workspace --all-targets`    |
 
-Optional: install [`mise`](https://mise.jdx.dev/) and run `mise install` to
-pin all runtime versions from `.mise.toml`. Each language also has its own
-native pin (`.nvmrc`, `pyproject.toml` `requires-python`, `go.mod` `go`
-directive, `rust-version` in `Cargo.toml`), so mise is not required.
+Native per-language pins (`.nvmrc`, `pyproject.toml` `requires-python`,
+`go.mod` `go` directive, `rust-version` in `Cargo.toml`) remain
+authoritative — mise reads them, so they keep a non-mise fallback
+working.
 
 ## Structure
 
@@ -80,9 +89,9 @@ Scopes should prefix the language when relevant: `feat(py): ...`,
 
 Work is NOT complete until `git push` succeeds.
 
-1. **Quality gates** (run the ones that changed, or just `make`):
+1. **Quality gates** (run the ones that changed, or just `mise run ci`):
    ```bash
-   make lint typecheck test
+   mise run lint typecheck test
    ```
 
 2. **Push**:

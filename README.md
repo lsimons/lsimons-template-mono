@@ -3,8 +3,9 @@
 Project template for a polyglot monorepo covering Python, TypeScript, Go,
 and Rust. Each language uses its **native workspace** so standard toolchain
 commands (uv / pnpm / `go.work` / Cargo workspace) keep working without an
-orchestrator layer on top. A thin top-level `Makefile` wraps them for
-unified `make lint test` style invocation.
+orchestrator layer on top. [`mise`](https://mise.jdx.dev/) pins every
+toolchain version and exposes every repo command as a task, so
+`mise run lint test` replaces the old `make lint test` pattern.
 
 ## Using This Template
 
@@ -31,18 +32,22 @@ unified `make lint test` style invocation.
 6. Drop any languages you don't need: delete the `packages/lsimons-$project-<lang>/`
    directory, remove the corresponding workspace entry
    (`pyproject.toml` / `pnpm-workspace.yaml` / `go.work` / root
-   `Cargo.toml`), delete the matching Makefile targets, and delete the
-   matching CI job.
+   `Cargo.toml`), delete the matching mise tasks (`<lang>:*` in
+   `.mise.toml`), remove the language from the top-level task `depends`
+   lists, and delete the matching CI job.
 
 ## Included Configuration
 
 ### Shared
 - **GitHub Actions CI** on push/PR to main, with actions pinned to
   full-length commit SHAs (the repo setting *Require actions to be
-  pinned to a full-length commit SHA* is enabled)
-- **`Makefile`** orchestrator — zero-install, delegates to native tools
-- **`.mise.toml`** optional runtime-version pin (Node, pnpm, Python, Rust, Go)
-- **`docs/spec/`** for spec-driven development
+  pinned to a full-length commit SHA* is enabled). Uses
+  `jdx/mise-action` to install the toolchain, then `mise run <lang>:*`.
+- **`.mise.toml`** pins toolchain versions AND defines every repo task
+  (install / lint / format / typecheck / test / build / clean / ci,
+  with per-language `<lang>:*` namespaces)
+- **`docs/spec/`** for spec-driven development (see
+  `docs/spec/002-mise-adoption.md` for the mise rationale)
 
 ### Python (uv workspace)
 - Python 3.14+, uv workspace with `packages/*-py` members
@@ -81,12 +86,11 @@ lsimons-$project/
 │   ├── lsimons-$project-go/          # Go module
 │   └── lsimons-$project-rs/          # Rust crate (lib + bin)
 ├── .golangci.yml                     # Go linter
-├── .mise.toml                        # Optional toolchain pin
+├── .mise.toml                        # Toolchain pin + task runner
 ├── .nvmrc                            # Node version pin
 ├── AGENTS.md                         # AI agent instructions
 ├── CLAUDE.md -> AGENTS.md            # Claude Code compatibility
 ├── Cargo.toml                        # Rust workspace root
-├── Makefile                          # Top-level orchestrator
 ├── biome.json                        # TS lint + format
 ├── clippy.toml                       # Rust lint MSRV
 ├── go.work                           # Go workspace
@@ -101,20 +105,27 @@ lsimons-$project/
 ## Development Commands
 
 ```bash
-# Install (Python + TypeScript)
-make install
+# One-time: pin + install toolchains from .mise.toml
+mise install
 
-# Lint / typecheck / test / format everything
-make lint
-make typecheck
-make test
-make format
+# Install deps (Python + TypeScript)
+mise run install
 
-# Language-scoped targets
-make py-test        # uv run pytest
-make ts-test        # pnpm -r --parallel test
-make go-test        # go test -race -cover ./...
-make rs-test        # cargo test --workspace --all-targets
+# Lint / typecheck / test / format / build everything
+mise run lint
+mise run typecheck
+mise run test
+mise run format
+mise run build
+
+# Full CI gate locally
+mise run ci
+
+# Language-scoped tasks
+mise run py:test        # uv run pytest
+mise run ts:test        # pnpm -r --parallel test
+mise run go:test        # go test -race -cover ./...  (per module)
+mise run rs:test        # cargo test --workspace --all-targets
 ```
 
 Per-language native commands work the same way they would in each
