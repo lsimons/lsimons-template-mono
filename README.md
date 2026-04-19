@@ -43,7 +43,7 @@ toolchain version and exposes every repo command as a task, so
   (install / lint / format / typecheck / test / build / clean / ci,
   with per-language `<lang>:*` namespaces)
 - **`docs/spec/`** for spec-driven development (see
-  `docs/spec/002-mise-adoption.md` for the mise rationale)
+  `docs/spec/002-toolchain.md` for the mise/CI rationale)
 
 ### Python (uv workspace)
 - Python 3.14+, uv workspace with `packages/*-py` members

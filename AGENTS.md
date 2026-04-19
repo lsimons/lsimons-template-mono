@@ -11,8 +11,8 @@ Brief project description.
 This repo is a polyglot monorepo: each language uses its **native workspace**
 (uv / pnpm / `go.work` / Cargo workspace). [`mise`](https://mise.jdx.dev/)
 is the top-level entry point — it pins every toolchain version and exposes
-every repo command as a task (see `.mise.toml`). `docs/spec/002-mise-
-adoption.md` has the full rationale.
+every repo command as a task (see `.mise.toml`).
+`docs/spec/002-toolchain.md` has the full rationale.
 
 ## Quick Reference
 
