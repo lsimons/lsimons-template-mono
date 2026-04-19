@@ -16,6 +16,8 @@ python = "3.14"
 rust = "latest"
 go = "1.26"
 uv = "latest"
+golangci-lint = "latest"
+gofumpt = "latest"
 
 # Project-scoped env: load an optional .env if present (fnox-generated
 # or hand-written). Keep secrets out of git; use fnox for op:// refs.
