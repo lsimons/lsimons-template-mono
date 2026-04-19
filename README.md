@@ -65,7 +65,7 @@ toolchain version and exposes every repo command as a task, so
 - golangci-lint v2, gofumpt + goimports, `go test -race -cover`
 
 ### Rust (Cargo workspace)
-- Edition 2024, MSRV 1.85
+- Edition 2024, tracks latest stable Rust (no MSRV pin)
 - Single workspace with shared lints (`all + pedantic` warn, `unsafe_code = forbid`)
 - Release profile tuned for small binaries (thin LTO, strip, 1 codegen unit)
 - clap 4 (derive) + assert_cmd/predicates for CLI tests
@@ -92,7 +92,6 @@ lsimons-$project/
 ├── CLAUDE.md -> AGENTS.md            # Claude Code compatibility
 ├── Cargo.toml                        # Rust workspace root
 ├── biome.json                        # TS lint + format
-├── clippy.toml                       # Rust lint MSRV
 ├── go.work                           # Go workspace
 ├── package.json                      # TS workspace root
 ├── pnpm-workspace.yaml               # pnpm workspace members

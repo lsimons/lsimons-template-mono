@@ -36,9 +36,10 @@ the way:
 | Rust       | (none)              | `cargo fmt --all --check && cargo clippy --workspace --all-targets --all-features -- -D warnings` | (via clippy) | `cargo test --workspace --all-targets`    |
 
 Native per-language pins (`.nvmrc`, `pyproject.toml` `requires-python`,
-`go.mod` `go` directive, `rust-version` in `Cargo.toml`) remain
-authoritative — mise reads them, so they keep a non-mise fallback
-working.
+`go.mod` `go` directive) remain authoritative — mise reads them, so
+they keep a non-mise fallback working. Rust is a deliberate exception:
+we track latest stable rather than an MSRV, so there is no
+`rust-version` in `Cargo.toml`.
 
 ## Structure
 
@@ -70,7 +71,8 @@ to add specs.
 - Tests for all functionality; prefer stdlib `testing` with table-driven cases
 
 **Rust:**
-- Edition 2024; MSRV tracked via `rust-version` in `Cargo.toml`
+- Edition 2024; track latest stable (`rust = "latest"` in `.mise.toml`),
+  no MSRV pin
 - `cargo clippy -- -D warnings` clean (warn on `all` + `pedantic`)
 - `unsafe_code = "forbid"` by default (workspace-level lint)
 
