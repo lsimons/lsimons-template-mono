@@ -25,6 +25,10 @@ gofumpt = "latest"
 _.file = { path = ".env", optional = true }
 
 # ---------- Top-level fan-outs ----------
+[tasks.init]
+description = "Rename this template to a new project (see scripts/init.py)"
+run = "python3 scripts/init.py"
+
 [tasks.install]
 description = "Install all language dependencies"
 depends = ["py:install", "ts:install"]

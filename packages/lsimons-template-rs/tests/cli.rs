@@ -3,7 +3,7 @@ use predicates::str::contains;
 
 #[test]
 fn greets_named_arg() {
-    Command::cargo_bin("lsimons-$project-rs")
+    Command::cargo_bin("lsimons-template-rs")
         .unwrap()
         .arg("Rust")
         .assert()
@@ -13,7 +13,7 @@ fn greets_named_arg() {
 
 #[test]
 fn greets_default() {
-    Command::cargo_bin("lsimons-$project-rs")
+    Command::cargo_bin("lsimons-template-rs")
         .unwrap()
         .assert()
         .success()
@@ -22,7 +22,7 @@ fn greets_default() {
 
 #[test]
 fn rejects_empty_name() {
-    Command::cargo_bin("lsimons-$project-rs")
+    Command::cargo_bin("lsimons-template-rs")
         .unwrap()
         .arg("")
         .assert()

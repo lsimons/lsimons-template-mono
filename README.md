@@ -9,29 +9,25 @@ toolchain version and exposes every repo command as a task, so
 
 ## Using This Template
 
-1. Copy this repository to create a new project
-2. Replace placeholders throughout:
-   - `$project` — project name (e.g., `myproject`)
-   - `$shortDescription` — one-line description
+1. Click **Use this template** on GitHub (or clone this repo).
+2. Clone your new repo locally and run:
 
-3. Update manifests:
-   - `pyproject.toml` (root + `packages/lsimons-$project-py/`) — rename
-     `lsimons-$project-workspace` / `lsimons-$project-py`
-   - `package.json` (root) — rename `lsimons-$project-workspace`
-   - `packages/lsimons-$project-ts/package.json` — rename
-   - `packages/lsimons-$project-go/go.mod` — update module path
-   - `go.work` — update the `use` directive
-   - `Cargo.toml` (root) — update `members`
-   - `packages/lsimons-$project-rs/Cargo.toml` — rename
+   ```bash
+   mise install          # pin + install every toolchain
+   mise run init         # rename `template` → your project name
+                         # (updates manifests + renames 4 package dirs)
+   mise run install      # uv sync + pnpm install
+   ```
 
-4. Rename the four package directories once placeholders are substituted.
+   `mise run init` auto-detects your project name from the git remote
+   (or directory name), stripping `lsimons-` / `-mono` suffixes. Pass
+   `--name foo` to override. See `scripts/init.py` for details.
 
-5. Update `AGENTS.md` (and `CLAUDE.md` symlink) with project-specific
+3. Update `AGENTS.md` (and `CLAUDE.md` symlink) with project-specific
    instructions.
-
-6. Drop any languages you don't need: delete the `packages/lsimons-$project-<lang>/`
-   directory, remove the corresponding workspace entry
-   (`pyproject.toml` / `pnpm-workspace.yaml` / `go.work` / root
+4. Drop any languages you don't need: delete the
+   `packages/lsimons-<name>-<lang>/` directory, remove the workspace
+   entry (`pyproject.toml` / `pnpm-workspace.yaml` / `go.work` / root
    `Cargo.toml`), delete the matching mise tasks (`<lang>:*` in
    `.mise.toml`), remove the language from the top-level task `depends`
    lists, and delete the matching CI job.
@@ -70,21 +66,18 @@ toolchain version and exposes every repo command as a task, so
 - Release profile tuned for small binaries (thin LTO, strip, 1 codegen unit)
 - clap 4 (derive) + assert_cmd/predicates for CLI tests
 
-> **Note:** CI is red on this template repo itself — the `$project`
-> placeholder makes every manifest name malformed on purpose. Once you
-> fork and do the search/replace described above, CI turns green.
-
 ## Project Structure
 
 ```
-lsimons-$project/
+lsimons-template-mono/
 ├── .github/workflows/ci.yml          # 4 parallel jobs (py / ts / go / rs)
 ├── docs/spec/                        # Feature specifications
+├── scripts/init.py                   # Rename-to-your-project helper
 ├── packages/
-│   ├── lsimons-$project-py/          # Python package
-│   ├── lsimons-$project-ts/          # TypeScript package
-│   ├── lsimons-$project-go/          # Go module
-│   └── lsimons-$project-rs/          # Rust crate (lib + bin)
+│   ├── lsimons-template-py/          # Python package
+│   ├── lsimons-template-ts/          # TypeScript package
+│   ├── lsimons-template-go/          # Go module
+│   └── lsimons-template-rs/          # Rust crate (lib + bin)
 ├── .golangci.yml                     # Go linter
 ├── .mise.toml                        # Toolchain pin + task runner
 ├── .nvmrc                            # Node version pin

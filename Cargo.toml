@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["packages/lsimons-$project-rs"]
+members = ["packages/lsimons-template-rs"]
 
 [workspace.package]
 edition = "2024"

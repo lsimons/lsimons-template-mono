@@ -1,9 +1,9 @@
-//! Thin CLI wrapper around the [`lsimons_$project`] library.
+//! Thin CLI wrapper around the [`lsimons_template`] library.
 
 use std::process::ExitCode;
 
 use clap::Parser;
-use lsimons_$project::greet;
+use lsimons_template::greet;
 
 #[derive(Debug, Parser)]
 #[command(author, version, about, long_about = None)]

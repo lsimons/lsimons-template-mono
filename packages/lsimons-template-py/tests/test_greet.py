@@ -1,6 +1,6 @@
 import pytest
 
-from lsimons_$project import greet
+from lsimons_template import greet
 
 
 def test_greet_returns_greeting() -> None:

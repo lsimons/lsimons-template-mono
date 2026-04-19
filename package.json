@@ -1,8 +1,8 @@
 {
-    "name": "lsimons-$project-workspace",
+    "name": "lsimons-template-workspace",
     "version": "0.0.0",
     "private": true,
-    "description": "Workspace root for lsimons-$project (TypeScript side)",
+    "description": "Workspace root for lsimons-template (TypeScript side)",
     "engines": {
         "node": ">=24"
     },

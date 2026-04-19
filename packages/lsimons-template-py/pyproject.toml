@@ -3,17 +3,17 @@ requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "lsimons-$project-py"
+name = "lsimons-template-py"
 version = "0.1.0"
-description = "$shortDescription (Python)"
+description = "Brief project description (Python)"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = []
 authors = [{ name = "lsimons" }]
 
 [project.scripts]
-# "lsimons-$project" = "lsimons_$project.cli:main"
+# "lsimons-template" = "lsimons_template.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["lsimons_$project*"]
+include = ["lsimons_template*"]

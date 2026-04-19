@@ -1,4 +1,4 @@
-//! Library crate for `lsimons-$project-rs`.
+//! Library crate for `lsimons-template-rs`.
 
 /// Error returned by [`greet`] when the input is invalid.
 #[derive(Debug, PartialEq, Eq)]

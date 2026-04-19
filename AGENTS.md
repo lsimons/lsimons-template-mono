@@ -1,6 +1,10 @@
-# Agent Instructions for lsimons-$project
+# Agent Instructions for lsimons-template-mono
 
 > This file (`AGENTS.md`) is the canonical agent configuration. `CLAUDE.md` is a symlink to this file.
+
+> **If this repo still says "template" everywhere:** run
+> `mise run init` once to rename the placeholder packages to your
+> project name. See `scripts/init.py` for details.
 
 Brief project description.
 
@@ -45,10 +49,10 @@ we track latest stable rather than an MSRV, so there is no
 
 ```
 packages/
-├── lsimons-$project-py/   # Python (uv workspace member)
-├── lsimons-$project-ts/   # TypeScript (pnpm workspace member)
-├── lsimons-$project-go/   # Go (module in go.work)
-└── lsimons-$project-rs/   # Rust (crate in Cargo workspace; lib + bin)
+├── lsimons-template-py/   # Python (uv workspace member)
+├── lsimons-template-ts/   # TypeScript (pnpm workspace member)
+├── lsimons-template-go/   # Go (module in go.work)
+└── lsimons-template-rs/   # Rust (crate in Cargo workspace; lib + bin)
 ```
 
 See `docs/spec/000-shared-patterns.md` for the naming convention and when

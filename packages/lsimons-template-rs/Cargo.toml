@@ -1,18 +1,18 @@
 [package]
-name = "lsimons-$project-rs"
+name = "lsimons-template-rs"
 version = "0.1.0"
-description = "$shortDescription (Rust)"
+description = "Brief project description (Rust)"
 edition.workspace = true
 authors.workspace = true
 license-file.workspace = true
 readme.workspace = true
 
 [lib]
-name = "lsimons_$project"
+name = "lsimons_template"
 path = "src/lib.rs"
 
 [[bin]]
-name = "lsimons-$project-rs"
+name = "lsimons-template-rs"
 path = "src/main.rs"
 
 [dependencies]

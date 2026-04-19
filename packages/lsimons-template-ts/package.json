@@ -1,7 +1,7 @@
 {
-    "name": "lsimons-$project-ts",
+    "name": "lsimons-template-ts",
     "version": "0.1.0",
-    "description": "$shortDescription (TypeScript)",
+    "description": "Brief project description (TypeScript)",
     "type": "module",
     "private": true,
     "main": "./src/index.ts",
