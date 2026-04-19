@@ -12,6 +12,7 @@
             "**/*.js",
             "**/*.jsx",
             "**/*.json",
+            "!**/.claude",
             "!**/dist",
             "!**/coverage",
             "!**/node_modules",
