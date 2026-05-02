@@ -15,7 +15,8 @@ updates:
     cooldown:
       default-days: 7
   - package-ecosystem: "gomod"
-    directory: "/"
+    directories:
+      - "/packages/*-go"
     schedule:
       interval: "weekly"
     cooldown:
