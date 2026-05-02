@@ -1,2 +1,6 @@
 packages:
     - "packages/*-ts"
+
+minimumReleaseAge: 10080
+minimumReleaseAgeExclude:
+    - "@lsimons/*"

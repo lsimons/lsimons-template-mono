@@ -41,3 +41,6 @@ include = ["packages/*-py/src", "packages/*-py/tests"]
 testpaths = ["packages"]
 addopts = "-v"
 python_files = ["test_*.py", "*_test.py"]
+
+[tool.uv]
+exclude-newer = "1 week"
