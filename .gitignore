@@ -59,6 +59,7 @@ cobertura.xml
 *.swp
 *.swo
 *~
+.claude/settings.local.json
 
 # Operating systems
 .DS_Store
