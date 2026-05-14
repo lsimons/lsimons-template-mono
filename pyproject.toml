@@ -15,10 +15,10 @@ members = ["packages/*-py"]
 
 [dependency-groups]
 dev = [
-    "pytest>=8.0.0",
-    "pytest-cov>=7.0.0",
-    "ruff>=0.8.0",
-    "basedpyright>=1.22.0",
+    "pytest>=9.0.3",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.15.12",
+    "basedpyright>=1.39.3",
 ]
 
 [tool.ruff]
