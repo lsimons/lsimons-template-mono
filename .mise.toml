@@ -18,6 +18,10 @@ go = "1.26"
 uv = "latest"
 golangci-lint = "latest"
 gofumpt = "latest"
+# Docs site (packages/lsimons-template-doc): Astro Starlight builds with bun,
+# Quarto renders the slide decks.
+bun = "1.3"
+"aqua:quarto-dev/quarto-cli" = "1.8"
 
 # Project-scoped env: load an optional .env if present (fnox-generated
 # or hand-written). Keep secrets out of git; use fnox for op:// refs.
@@ -31,7 +35,7 @@ run = "python3 scripts/init.py"
 
 [tasks.install]
 description = "Install all language dependencies"
-depends = ["py:install", "ts:install"]
+depends = ["py:install", "ts:install", "doc:install"]
 
 [tasks.lint]
 description = "Run all linters"
@@ -42,8 +46,8 @@ description = "Auto-format all languages"
 depends = ["py:format", "ts:format", "go:format", "rs:format"]
 
 [tasks.typecheck]
-description = "Run type checkers (py + ts)"
-depends = ["py:typecheck", "ts:typecheck"]
+description = "Run type checkers (py + ts + doc)"
+depends = ["py:typecheck", "ts:typecheck", "doc:check"]
 
 [tasks.test]
 description = "Run all tests"
@@ -51,7 +55,7 @@ depends = ["py:test", "ts:test", "go:test", "rs:test"]
 
 [tasks.build]
 description = "Build all buildable targets"
-depends = ["ts:build", "go:build", "rs:build"]
+depends = ["ts:build", "go:build", "rs:build", "doc:build"]
 
 [tasks.ci]
 description = "Full CI gate: lint + typecheck + test + build"
@@ -63,6 +67,7 @@ run = """
 rm -rf node_modules packages/*/node_modules
 rm -rf .venv packages/*/.venv
 rm -rf target
+rm -rf packages/lsimons-template-doc/.astro
 find packages -name 'bin' -maxdepth 2 -type d -exec rm -rf {} +
 find packages -name 'dist' -maxdepth 2 -type d -exec rm -rf {} +
 find packages -name '*.tsbuildinfo' -delete
@@ -172,6 +177,65 @@ run = "cargo test --workspace --all-targets"
 
 [tasks."rs:build"]
 run = "cargo build --workspace --all-targets"
+
+# ---------- Docs (Astro Starlight + Quarto) ----------
+# The docs site is a bun project under packages/lsimons-template-doc; it is
+# intentionally NOT a pnpm workspace member (pnpm globs `packages/*-ts`).
+[tasks."doc:install"]
+description = "Install the docs site dependencies (bun)"
+dir = "packages/lsimons-template-doc"
+run = "bun install"
+
+[tasks."doc:dev"]
+description = "Start the live-reloading docs dev server"
+dir = "packages/lsimons-template-doc"
+run = "bun run dev"
+
+[tasks."doc:build"]
+description = "Build the static docs site into packages/lsimons-template-doc/dist"
+dir = "packages/lsimons-template-doc"
+run = "bun run build"
+
+[tasks."doc:preview"]
+description = "Preview the production docs build"
+dir = "packages/lsimons-template-doc"
+run = "bun run preview"
+
+[tasks."doc:check"]
+description = "Astro type/content check for the docs site"
+dir = "packages/lsimons-template-doc"
+run = "bunx astro check"
+
+[tasks."doc:slides"]
+description = "Render the example Quarto slide deck to HTML + PDF"
+run = "quarto render {{arg(name='deck', default='packages/lsimons-template-doc/public/presentations/example.qmd')}}"
+
+[tasks."doc:favicon"]
+description = "Regenerate the docs favicon + apple-touch-icon from the palette"
+dir = "packages/lsimons-template-doc"
+run = "bun run scripts/gen-favicon.mjs"
+
+[tasks."doc:clean"]
+description = "Remove docs build artifacts"
+run = "rm -rf packages/lsimons-template-doc/dist packages/lsimons-template-doc/.astro"
+
+[tasks."doc:browser"]
+description = "Install the Chromium browser Playwright uses for screenshots"
+dir = "packages/lsimons-template-doc"
+run = "bunx playwright install chromium"
+
+[tasks."doc:screenshot"]
+description = "Build, serve, and screenshot a page (args: [out] [path]). Needs `mise run doc:browser` once."
+dir = "packages/lsimons-template-doc"
+run = """
+out="{{arg(name='out', default='out.png')}}"
+path="{{arg(name='path', default='/lsimons-template-mono/')}}"
+bun run build
+bun run preview --port 4321 > /tmp/astro-preview.log 2>&1 &
+sleep 4
+bunx playwright screenshot --viewport-size=1280,800 "http://localhost:4321${path}" "$out"
+status=$?; pkill -f "astro preview" || true; exit $status
+"""
 
 [tasks.ci-watch]
 description = "Watch GitHub Actions CI for the current branch; exits non-zero on failure"

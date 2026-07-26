@@ -9,9 +9,10 @@
 Brief project description.
 
 This repo is a polyglot monorepo: each language uses its **native workspace**
-(uv / pnpm / `go.work` / Cargo workspace). [`mise`](https://mise.jdx.dev/)
-is the top-level entry point — it pins every toolchain version and exposes
-every repo command as a task (see `.mise.toml`).
+(uv / pnpm / `go.work` / Cargo workspace), plus an Astro Starlight
+documentation site (bun) deployed to GitHub Pages.
+[`mise`](https://mise.jdx.dev/) is the top-level entry point — it pins every
+toolchain version and exposes every repo command as a task (see `.mise.toml`).
 `docs/spec/002-toolchain.md` has the full rationale.
 
 ## Quick Reference
@@ -27,7 +28,10 @@ toolchain), then `mise run install` (uv sync + pnpm install).
 - **Full CI gate**: `mise run ci`
 
 Tasks are namespaced `<lang>:<verb>` so you can fan out at any
-granularity — e.g. `mise run py:lint`, `mise run rs:test`.
+granularity — e.g. `mise run py:lint`, `mise run rs:test`. The docs site
+uses the `doc:` namespace — e.g. `mise run doc:dev`, `mise run doc:build`,
+`mise run doc:check` (Astro type/content check, part of `typecheck`),
+`mise run doc:slides` (render the Quarto deck).
 
 Per-language native commands still work standalone when mise isn't in
 the way:
@@ -49,14 +53,25 @@ we track latest stable rather than an MSRV, so there is no
 
 ```
 packages/
-├── lsimons-template-py/   # Python (uv workspace member)
-├── lsimons-template-ts/   # TypeScript (pnpm workspace member)
-├── lsimons-template-go/   # Go (module in go.work)
-└── lsimons-template-rs/   # Rust (crate in Cargo workspace; lib + bin)
+├── lsimons-template-py/    # Python (uv workspace member)
+├── lsimons-template-ts/    # TypeScript (pnpm workspace member)
+├── lsimons-template-go/    # Go (module in go.work)
+├── lsimons-template-rs/    # Rust (crate in Cargo workspace; lib + bin)
+└── lsimons-template-doc/   # Docs site (Astro Starlight; bun; standalone)
 ```
 
 See `docs/spec/000-shared-patterns.md` for the naming convention and when
 to add specs.
+
+The docs site is a *project* site served under the `/lsimons-template-mono`
+base path (set in `packages/lsimons-template-doc/astro.config.mjs`), so
+content links and image sources are written root-relative and a rehype
+plugin prepends the base at render time. It is deliberately **not** a pnpm
+workspace member (`pnpm-workspace.yaml` globs `packages/*-ts` only) — bun
+manages it standalone. `.github/workflows/deploy.yml` publishes
+`packages/lsimons-template-doc/dist` to GitHub Pages on push to `main`; the
+Pages source must be set to "GitHub Actions". CI does not run Quarto — the
+slide outputs under `public/presentations/` are committed.
 
 ## Guidelines
 
@@ -79,6 +94,14 @@ to add specs.
   no MSRV pin
 - `cargo clippy -- -D warnings` clean (warn on `all` + `pedantic`)
 - `unsafe_code = "forbid"` by default (workspace-level lint)
+
+**Docs:**
+- Astro Starlight (bun); `mise run doc:check` (Astro type/content check)
+  must pass clean and `mise run doc:build` must succeed
+- Markdown pages live in `src/content/docs/`; each needs a `title` in
+  frontmatter. Write content links/images root-relative (`/guides/foo/`)
+- Slide decks are Quarto `.qmd` in `public/presentations/`; commit the
+  rendered HTML/PDF (`mise run doc:slides`) — CI does not run Quarto
 
 ## Commit Message Convention
 

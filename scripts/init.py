@@ -3,8 +3,8 @@
 
 Replaces the placeholder token `template` (and its compound forms:
 `lsimons-template`, `lsimons_template`, `template-py`, `template-ts`,
-`template-go`, `template-rs`) with your project name throughout source
-files, manifests, and directory names.
+`template-go`, `template-rs`, `template-doc`) with your project name
+throughout source files, manifests, and directory names.
 
 Default name is auto-detected from the git remote basename (stripped of
 a `lsimons-` prefix and of a language-suffix like `-mono/-py/-ts/-go/
@@ -35,6 +35,7 @@ COMPOUND_PATTERNS = [
     "{}-ts",
     "{}-go",
     "{}-rs",
+    "{}-doc",
 ]
 
 # File suffixes where we also replace bare `template` at word boundaries
@@ -57,8 +58,8 @@ CODE_SUFFIXES = {
 }
 
 # Prose files: only compound patterns are replaced; bare `template`
-# kept as-is (likely descriptive English in a README).
-PROSE_SUFFIXES = {".md"}
+# kept as-is (likely descriptive English in a README or docs page).
+PROSE_SUFFIXES = {".md", ".mdx"}
 
 IGNORE_DIRS = {
     ".git",
@@ -74,6 +75,7 @@ IGNORE_DIRS = {
     ".pytest_cache",
     ".ruff_cache",
     ".next",
+    ".astro",
 }
 
 BARE_PATTERN = re.compile(r"\b" + re.escape(PLACEHOLDER) + r"\b")

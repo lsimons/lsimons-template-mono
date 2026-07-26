@@ -1,7 +1,8 @@
 # lsimons-template-mono
 
 Project template for a polyglot monorepo covering Python, TypeScript, Go,
-and Rust. Each language uses its **native workspace** so standard toolchain
+and Rust, plus an Astro Starlight documentation site published to GitHub
+Pages. Each language uses its **native workspace** so standard toolchain
 commands (uv / pnpm / `go.work` / Cargo workspace) keep working without an
 orchestrator layer on top. [`mise`](https://mise.jdx.dev/) pins every
 toolchain version and exposes every repo command as a task, so
@@ -15,7 +16,7 @@ toolchain version and exposes every repo command as a task, so
    ```bash
    mise install          # pin + install every toolchain
    mise run init         # rename `template` → your project name
-                         # (updates manifests + renames 4 package dirs)
+                         # (updates manifests + renames 5 package dirs)
    mise run install      # uv sync + pnpm install
    ```
 
@@ -39,6 +40,9 @@ toolchain version and exposes every repo command as a task, so
   full-length commit SHAs (the repo setting *Require actions to be
   pinned to a full-length commit SHA* is enabled). Uses
   `jdx/mise-action` to install the toolchain, then `mise run <lang>:*`.
+- **GitHub Pages deploy** (`.github/workflows/deploy.yml`) publishes the
+  docs site to Pages on push to main. Set the Pages source to "GitHub
+  Actions" (not "Deploy from a branch") in repo settings.
 - **`.mise.toml`** pins toolchain versions AND defines every repo task
   (install / lint / format / typecheck / test / build / clean / ci,
   with per-language `<lang>:*` namespaces)
@@ -66,18 +70,29 @@ toolchain version and exposes every repo command as a task, so
 - Release profile tuned for small binaries (thin LTO, strip, 1 codegen unit)
 - clap 4 (derive) + assert_cmd/predicates for CLI tests
 
+### Docs (Astro Starlight + Quarto)
+- `packages/lsimons-template-doc/` — an Astro Starlight site built with
+  bun, deployed to GitHub Pages under the `/lsimons-template-mono` base
+  path (`astro.config.mjs`)
+- Quarto slide decks in `public/presentations/` (committed HTML/PDF; CI
+  does not run Quarto). Render with `mise run doc:slides`
+- Intentionally **not** a pnpm workspace member — bun manages it
+  standalone (`pnpm-workspace.yaml` globs `packages/*-ts` only)
+
 ## Project Structure
 
 ```
 lsimons-template-mono/
-├── .github/workflows/ci.yml          # 4 parallel jobs (py / ts / go / rs)
+├── .github/workflows/ci.yml          # parallel jobs (py / ts / go / rs / docs)
+├── .github/workflows/deploy.yml      # docs → GitHub Pages on push to main
 ├── docs/spec/                        # Feature specifications
 ├── scripts/init.py                   # Rename-to-your-project helper
 ├── packages/
 │   ├── lsimons-template-py/          # Python package
 │   ├── lsimons-template-ts/          # TypeScript package
 │   ├── lsimons-template-go/          # Go module
-│   └── lsimons-template-rs/          # Rust crate (lib + bin)
+│   ├── lsimons-template-rs/          # Rust crate (lib + bin)
+│   └── lsimons-template-doc/         # Astro Starlight docs site (bun)
 ├── .golangci.yml                     # Go linter
 ├── .mise.toml                        # Toolchain pin + task runner
 ├── .nvmrc                            # Node version pin
@@ -100,7 +115,7 @@ lsimons-template-mono/
 # One-time: pin + install toolchains from .mise.toml
 mise install
 
-# Install deps (Python + TypeScript)
+# Install deps (Python + TypeScript + docs)
 mise run install
 
 # Lint / typecheck / test / format / build everything
@@ -118,6 +133,11 @@ mise run py:test        # uv run pytest
 mise run ts:test        # pnpm -r --parallel test
 mise run go:test        # go test -race -cover ./...  (per module)
 mise run rs:test        # cargo test --workspace --all-targets
+
+# Docs site (Astro Starlight, bun)
+mise run doc:dev        # live-reloading dev server
+mise run doc:build      # static build into packages/lsimons-template-doc/dist
+mise run doc:slides     # render the example Quarto deck (HTML + PDF)
 ```
 
 Per-language native commands work the same way they would in each
