@@ -137,6 +137,36 @@ jobs:
         env:
           RUSTDOCFLAGS: -D warnings
 
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Set up mise
+        uses: jdx/mise-action@9e7f7633ff6f6d6048a9418a68d48f288f50eb14 # v4
+        with:
+          install: true
+          cache: true
+
+      - name: Cache bun install cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('packages/lsimons-template-doc/bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: Install
+        run: mise run doc:install
+
+      - name: Check (Astro type/content check)
+        run: mise run doc:check
+
+      - name: Build
+        run: mise run doc:build
+
   zizmor:
     name: Zizmor (GitHub Actions audit)
     runs-on: ubuntu-latest

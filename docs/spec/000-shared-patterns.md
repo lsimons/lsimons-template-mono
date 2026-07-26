@@ -38,6 +38,8 @@ discover what it owns:
 - `packages/<name>-ts/` — TypeScript (pnpm workspace member)
 - `packages/<name>-go/` — Go (module listed in `go.work`)
 - `packages/<name>-rs/` — Rust (crate listed in `Cargo.toml` workspace)
+- `packages/<name>-doc/` — Docs site (Astro Starlight; bun; standalone,
+  not a pnpm workspace member)
 
 When a single feature spans languages, pick one `<name>` and let the suffix
 distinguish the implementation.
