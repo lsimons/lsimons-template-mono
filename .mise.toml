@@ -24,7 +24,18 @@
 # stale silently. Refresh them deliberately with `mise up`, and read the
 # diff. Keep the native pin files in step when you do: `.nvmrc` (node),
 # `package.json` `packageManager` (pnpm), `go.work` (go),
-# `pyproject.toml` `requires-python` (python).
+# `pyproject.toml` `requires-python` (python). They are exact too, so
+# "they must agree" is literally checkable.
+#
+# The 7-day cooldown this repo applies to *dependencies*
+# (`dependabot.yml` cooldown, `pnpm-workspace.yaml` minimumReleaseAge,
+# `pyproject.toml` exclude-newer) is deliberately NOT applied here.
+# Tool versions are chosen by a human reading a changelog, not resolved
+# automatically, so the risk the cooldown mitigates — picking up a
+# freshly-published bad release without anyone looking — does not apply
+# in the same way. mise's own `minimum_release_age` may still hide a
+# version from `mise ls-remote`; that is a local mise setting, not this
+# repo's policy.
 [tools]
 node = "24.19.0"
 pnpm = "10.34.5"
@@ -188,7 +199,16 @@ done
 """
 
 # ---------- Rust ----------
+# `RUSTFLAGS = "-D warnings"` is repeated on every task that invokes
+# rustc, not set once in the workflow. `clippy -- -D warnings` only denies
+# *clippy* lints; the workspace also declares rustc lints
+# (`missing_debug_implementations = "warn"` in Cargo.toml), and those are
+# only denied by RUSTFLAGS. Setting it in CI alone let `mise run ci` pass
+# while CI failed. Keep the value identical across all four tasks —
+# a differing RUSTFLAGS invalidates cargo's fingerprint and forces a
+# full rebuild between them.
 [tasks."rs:lint"]
+env = { RUSTFLAGS = "-D warnings" }
 run = [
     "cargo fmt --all --check",
     "cargo clippy --workspace --all-targets --all-features -- -D warnings",
@@ -198,16 +218,18 @@ run = [
 run = "cargo fmt --all"
 
 [tasks."rs:test"]
+env = { RUSTFLAGS = "-D warnings" }
 run = "cargo test --workspace --all-targets"
 
 [tasks."rs:build"]
+env = { RUSTFLAGS = "-D warnings" }
 run = "cargo build --workspace --all-targets"
 
 # CI ran this as a bare `cargo doc` step, so `mise run ci` was a weaker
 # gate than the workflow. Same command, reachable both ways.
 [tasks."rs:doc"]
 description = "cargo doc with warnings denied"
-env = { RUSTDOCFLAGS = "-D warnings" }
+env = { RUSTFLAGS = "-D warnings", RUSTDOCFLAGS = "-D warnings" }
 run = "cargo doc --workspace --no-deps --all-features"
 
 # ---------- GitHub Actions ----------
@@ -229,20 +251,38 @@ run = "actionlint"
 #
 # Scoped to `.github` rather than `.` on purpose: `--collect=all` walks
 # the whole tree, and the docs site's `node_modules` ships third-party
-# workflows that are not ours to fix. `inputs:` on the CI zizmor step is
-# set to the same path so the two stay identical.
+# workflows that are not ours to fix. Nothing is lost — there is no
+# `action.yml` anywhere outside `.github`, and workflows, actions and
+# dependabot config are the only things zizmor audits. `inputs:` on the
+# CI zizmor step is set to the same path so the two stay identical.
+#
+# One deliberate asymmetry: `--strict-collection` has no `zizmor-action`
+# input, so it is local-only. That makes this task *stricter* than CI,
+# which fails safe. Do not delete the flag to "fix the drift".
+#
+# The token is resolved here and passed explicitly, and both env vars are
+# unset before zizmor runs. zizmor accepts a token from either
+# `GITHUB_TOKEN` (`--github-token`) or `GH_TOKEN` (`--gh-token`), and
+# rejects an *empty* one with a raw argument-parsing error (exit 2)
+# rather than treating it as absent — so a blank `GITHUB_TOKEN=` line in
+# the optional `.env` this file loads used to sail straight past the
+# check below. An already-exported non-empty token is used as-is, so this
+# also works where `gh` is not installed at all.
 [tasks.audit]
 description = "zizmor audit of GitHub Actions workflows + dependabot config"
 run = """
 set -e
-GH_TOKEN=$(gh auth token 2>/dev/null) || true
-if [ -z "$GH_TOKEN" ]; then
-  echo "No GitHub token: run \\`gh auth login\\`. Refusing to run a" >&2
-  echo "partial audit — the online audits would be silently skipped." >&2
+token="${GH_TOKEN:-}"
+if [ -z "$token" ]; then token="${GITHUB_TOKEN:-}"; fi
+if [ -z "$token" ]; then token=$(gh auth token 2>/dev/null) || true; fi
+if [ -z "$token" ]; then
+  echo "No GitHub token: run \\`gh auth login\\`, or export GH_TOKEN." >&2
+  echo "Refusing to run a partial audit — the online audits" >&2
+  echo "(impostor-commit, known-vulnerable-actions) would be skipped." >&2
   exit 1
 fi
-export GH_TOKEN
-zizmor --collect=all --strict-collection .github
+unset GH_TOKEN GITHUB_TOKEN
+zizmor --github-token "$token" --collect=all --strict-collection .github
 """
 
 # ---------- Docs (Astro Starlight + Quarto) ----------
