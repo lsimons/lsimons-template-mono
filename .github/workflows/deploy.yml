@@ -15,7 +15,12 @@ concurrency:
 
 jobs:
   build:
+    name: Build docs site
     runs-on: ubuntu-latest
+    # Stated explicitly rather than inherited: this job only reads the
+    # repo. The write scopes live on `deploy` alone.
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -47,6 +52,7 @@ jobs:
           path: packages/lsimons-template-doc/dist
 
   deploy:
+    name: Publish to GitHub Pages
     needs: build
     environment:
       name: github-pages

@@ -1,17 +1,42 @@
+# One entry per lockfile in this monorepo. Each `directory`/`directories`
+# below must point at a manifest+lock pair that actually exists, or the
+# ecosystem silently updates nothing.
 version: 2
 updates:
-  - package-ecosystem: "pip"
+  # Python: "uv" is the ecosystem that understands uv.lock. "pip" reads
+  # only pyproject.toml and would leave the lock file stale. The uv
+  # workspace root is "/"; members under packages/*-py are covered
+  # through it.
+  - package-ecosystem: "uv"
     directory: "/"
     schedule:
       interval: "weekly"
     cooldown:
       default-days: 7
+
+  # TypeScript: the pnpm workspace root is "/" and owns pnpm-lock.yaml
+  # for every packages/*-ts member.
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
     cooldown:
       default-days: 7
+
+  # Docs site: packages/*-doc is deliberately NOT a pnpm workspace member
+  # (pnpm-workspace.yaml globs packages/*-ts only) — bun manages it
+  # standalone, so its bun.lock needs its own entry. Without this, astro,
+  # starlight and playwright are never updated by anything.
+  - package-ecosystem: "bun"
+    directories:
+      - "/packages/*-doc"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+
+  # Go: go.work coordinates the modules, but dependabot reads each
+  # module's own go.mod/go.sum, so glob the module directories.
   - package-ecosystem: "gomod"
     directories:
       - "/packages/*-go"
@@ -19,12 +44,15 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 7
+
+  # Rust: the Cargo workspace root owns Cargo.lock for every member.
   - package-ecosystem: "cargo"
     directory: "/"
     schedule:
       interval: "weekly"
     cooldown:
       default-days: 7
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
