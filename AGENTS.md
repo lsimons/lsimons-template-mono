@@ -121,7 +121,17 @@ slide outputs under `public/presentations/` are committed.
   floor, unpin an action or a tool, or delete a failing test.
 - A change to one language must keep `mise run ci` green for all of
   them. `mise run ci` and the CI workflow must cover the same ground —
-  if you add a task to one, add it to the other.
+  if you add a task to one, add it to the other, and put shared
+  environment (`RUSTFLAGS`, `RUSTDOCFLAGS`, …) on the mise task rather
+  than in the workflow, or the local gate is weaker than CI.
+- **There is deliberately no `.editorconfig`.** Five formatters disagree
+  by design here — gofumpt uses tabs, ruff/biome/rustfmt use 4 spaces at
+  100 columns, and the YAML in `.github/workflows/` is 2-space while
+  `pnpm-workspace.yaml` is 4-space — so any single rule would be wrong
+  about part of the tree on day one and would manufacture the spurious
+  diffs the file exists to prevent. Biome also ignores `.editorconfig`
+  unless `formatter.useEditorconfig` is set. Do not add one without
+  resolving those conflicts first.
 
 **Supply chain:**
 
@@ -131,9 +141,13 @@ slide outputs under `public/presentations/` are committed.
   new package manager means adding an entry, or its dependencies are
   never updated by anything.
 - GitHub Actions are pinned to full-length commit SHAs with a `# vX.Y.Z`
-  comment. Pin the *commit*, not an annotated tag object — they are
-  different SHAs and only the commit is what Actions verifies. `zizmor`
-  catches the mismatch.
+  comment. Pin the *commit*, not an annotated tag object: for an
+  annotated tag, `refs/tags/vX.Y.Z` resolves to a tag object whose SHA is
+  **not** the commit SHA, and pasting that is easy to do by accident.
+  Check any pin you add or bump with
+  `gh api repos/<owner>/<repo>/git/commits/<sha>` — it returns the commit
+  for a real commit SHA and `404` for a tag object. `mise run audit`
+  catches it too (zizmor's `ref-version-mismatch`).
 - Every tool in `.mise.toml` is pinned to an exact version, python, go
   and rust included. Nothing there is covered by dependabot, so refresh
   it deliberately with `mise up` and read the diff.
