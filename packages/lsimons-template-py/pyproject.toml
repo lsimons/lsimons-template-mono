@@ -1,15 +1,24 @@
 [build-system]
-requires = ["setuptools>=45", "wheel"]
+# setuptools >= 77 is what PEP 639 `license = "<SPDX>"` needs. Modern
+# setuptools vendors the wheel builder, so `wheel` is not a build
+# requirement.
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "lsimons-template-py"
 version = "0.1.0"
 description = "Brief project description (Python)"
-readme = "README.md"
 requires-python = ">=3.14"
+# PEP 639 SPDX expression. There is deliberately no `license-files`: the
+# Apache-2.0 text lives in the monorepo root `LICENSE`, outside this
+# package directory, so setuptools cannot include it in the sdist.
+license = "Apache-2.0"
 dependencies = []
 authors = [{ name = "lsimons" }]
+# No `readme` here: this package has no README.md of its own, and
+# pointing at one that does not exist silently produces a wheel with a
+# `Description-Content-Type` header and no description body.
 
 [project.scripts]
 # "lsimons-template" = "lsimons_template.cli:main"

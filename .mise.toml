@@ -5,23 +5,48 @@
 # dispatches to the native toolchain per language.
 #
 # Native per-language pin files are kept alongside this one (.nvmrc,
-# rust-toolchain.toml, go.mod's `go` directive, pyproject.toml's
-# `requires-python`) so contributors without mise can still use the native
-# tools directly. If both are present, they must agree.
+# package.json's `packageManager`, go.work / go.mod's `go` directive,
+# pyproject.toml's `requires-python`) so contributors without mise can
+# still use the native tools directly. If both are present, they must
+# agree. There is no `rust-toolchain.toml`: rust is pinned here only.
 
+# Every tool is pinned to an exact version, deliberately and without
+# exception — including python, go and rust. This is a supply-chain rule,
+# not a stability one: an upstream compromise must never be
+# auto-downloaded. A blanket "pin everything, update mechanically" policy
+# is far easier to review than a per-dependency judgement about which
+# upstreams are trustworthy enough to float.
+#
+# Pinning the rust *toolchain* here is not an MSRV declaration; there is
+# still deliberately no `rust-version` in Cargo.toml.
+#
+# The cost is that nothing here is covered by dependabot, so these go
+# stale silently. Refresh them deliberately with `mise up`, and read the
+# diff. Keep the native pin files in step when you do: `.nvmrc` (node),
+# `package.json` `packageManager` (pnpm), `go.work` (go),
+# `pyproject.toml` `requires-python` (python).
 [tools]
-node = "24"
-pnpm = "10"
-python = "3.14"
-rust = "latest"
-go = "1.26"
-uv = "latest"
-golangci-lint = "latest"
-gofumpt = "latest"
+node = "24.19.0"
+pnpm = "10.34.5"
+python = "3.14.6"
+rust = "1.97.1"
+go = "1.26.5"
+uv = "0.12.2"
+golangci-lint = "2.12.2"
+gofumpt = "0.11.0"
 # Docs site (packages/lsimons-template-doc): Astro Starlight builds with bun,
 # Quarto renders the slide decks.
-bun = "1.3"
-"aqua:quarto-dev/quarto-cli" = "1.8"
+bun = "1.3.14"
+"aqua:quarto-dev/quarto-cli" = "1.8.27"
+# Used by `mise run audit`; must match `version:` on the workflow's
+# zizmor step. Bump them together.
+zizmor = "1.29.0"
+# Used by `mise run gha:lint`. actionlint shells out to shellcheck for
+# the `run:` blocks in workflows, and silently skips that half if
+# shellcheck is missing, so it is pinned here too rather than left to
+# whatever the host happens to have.
+actionlint = "1.7.12"
+shellcheck = "0.11.0"
 
 # Project-scoped env: load an optional .env if present (fnox-generated
 # or hand-written). Keep secrets out of git; use fnox for op:// refs.
@@ -39,7 +64,7 @@ depends = ["py:install", "ts:install", "doc:install"]
 
 [tasks.lint]
 description = "Run all linters"
-depends = ["py:lint", "ts:lint", "go:lint", "rs:lint"]
+depends = ["py:lint", "ts:lint", "go:lint", "rs:lint", "gha:lint"]
 
 [tasks.format]
 description = "Auto-format all languages"
@@ -55,7 +80,7 @@ depends = ["py:test", "ts:test", "go:test", "rs:test"]
 
 [tasks.build]
 description = "Build all buildable targets"
-depends = ["ts:build", "go:build", "rs:build", "doc:build"]
+depends = ["ts:build", "go:build", "rs:build", "rs:doc", "doc:build"]
 
 [tasks.ci]
 description = "Full CI gate: lint + typecheck + test + build"
@@ -177,6 +202,48 @@ run = "cargo test --workspace --all-targets"
 
 [tasks."rs:build"]
 run = "cargo build --workspace --all-targets"
+
+# CI ran this as a bare `cargo doc` step, so `mise run ci` was a weaker
+# gate than the workflow. Same command, reachable both ways.
+[tasks."rs:doc"]
+description = "cargo doc with warnings denied"
+env = { RUSTDOCFLAGS = "-D warnings" }
+run = "cargo doc --workspace --no-deps --all-features"
+
+# ---------- GitHub Actions ----------
+# actionlint needs shellcheck on PATH to check workflow `run:` blocks; it
+# skips them silently (still exiting 0) when shellcheck is missing, which
+# is why both are pinned in [tools] rather than left to the host.
+[tasks."gha:lint"]
+description = "actionlint (+ shellcheck) over .github/workflows"
+run = "actionlint"
+
+# Local mirror of the `zizmor` CI step, using the mise-pinned zizmor. Not
+# part of `ci` because it needs network access and a GitHub token for the
+# online audits.
+#
+# Without a token zizmor silently falls back to offline and skips the
+# `impostor-commit` and `known-vulnerable-actions` audits, which is an
+# unverified result, not a pass — so refuse to run rather than exit 0 on
+# a weaker check than the name promises.
+#
+# Scoped to `.github` rather than `.` on purpose: `--collect=all` walks
+# the whole tree, and the docs site's `node_modules` ships third-party
+# workflows that are not ours to fix. `inputs:` on the CI zizmor step is
+# set to the same path so the two stay identical.
+[tasks.audit]
+description = "zizmor audit of GitHub Actions workflows + dependabot config"
+run = """
+set -e
+GH_TOKEN=$(gh auth token 2>/dev/null) || true
+if [ -z "$GH_TOKEN" ]; then
+  echo "No GitHub token: run \\`gh auth login\\`. Refusing to run a" >&2
+  echo "partial audit — the online audits would be silently skipped." >&2
+  exit 1
+fi
+export GH_TOKEN
+zizmor --collect=all --strict-collection .github
+"""
 
 # ---------- Docs (Astro Starlight + Quarto) ----------
 # The docs site is a bun project under packages/lsimons-template-doc; it is
