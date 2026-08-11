@@ -60,13 +60,22 @@ cobertura.xml
 .env.*
 !.env.example
 
+# mise local overrides
+.mise.local.toml
+mise.local.toml
+
 # IDEs and editors
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+
+# Claude
+# `.claude/` itself is tracked on purpose — settings.json is shared
+# config. Only per-user state and scratch worktrees are ignored.
 .claude/settings.local.json
+.claude/worktrees
 
 # Operating systems
 .DS_Store

@@ -39,8 +39,18 @@ include = ["packages/*-py/src", "packages/*-py/tests"]
 
 [tool.pytest.ini_options]
 testpaths = ["packages"]
-addopts = "-v"
+# pytest-cov was already a dev dependency but nothing invoked it. The 80%
+# floor is enforced by the command that runs (`mise run py:test`), not
+# merely written down, and matches the vitest thresholds on the
+# TypeScript side so both halves of the gate agree.
+addopts = "-v --cov --cov-report=term-missing --cov-fail-under=80 --strict-markers --strict-config"
 python_files = ["test_*.py", "*_test.py"]
+xfail_strict = true
+
+[tool.coverage.run]
+# Measure every packages/*-py member rather than one hardcoded package.
+source = ["packages"]
+omit = ["*/tests/*"]
 
 [tool.uv]
 exclude-newer = "1 week"
