@@ -1,5 +1,7 @@
 [workspace]
-resolver = "2"
+# Edition 2024 implies resolver 3; state it rather than silently
+# inheriting an explicit downgrade in every derived monorepo.
+resolver = "3"
 members = ["packages/lsimons-template-rs"]
 
 [workspace.package]
