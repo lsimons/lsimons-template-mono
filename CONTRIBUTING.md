@@ -36,7 +36,8 @@ with the language as the scope where it helps: `feat(py): ...`,
 
 ## Reporting a security problem
 
-Do not open a public issue. See [SECURITY.md](SECURITY.md).
+Do not open a public issue for a vulnerability. Use the *Report a
+vulnerability* button under this repository's **Security** tab.
 
 ## Working with agents
 

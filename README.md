@@ -112,7 +112,6 @@ lsimons-template-mono/
 ├── CODE_OF_CONDUCT.md
 ├── CONTRIBUTING.md
 ├── LICENSE                           # Apache-2.0 (no file extension)
-├── SECURITY.md                       # How to report a vulnerability
 ├── Cargo.toml                        # Rust workspace root
 ├── Cargo.lock                        # never gitignore this
 ├── biome.json                        # TS lint + format
@@ -182,10 +181,6 @@ language:
 The language suffix in package names (`-py`, `-ts`, `-go`, `-rs`) makes
 workspace globs unambiguous and avoids collisions when one feature has
 multiple implementations. See `docs/spec/000-shared-patterns.md`.
-
-## Security
-
-See [SECURITY.md](./SECURITY.md).
 
 ## License
 
