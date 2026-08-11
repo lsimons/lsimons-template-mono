@@ -5,7 +5,7 @@ members = ["packages/lsimons-template-rs"]
 [workspace.package]
 edition = "2024"
 authors = ["lsimons"]
-license-file = "LICENSE.md"
+license-file = "LICENSE"
 readme = "README.md"
 
 [workspace.lints.rust]

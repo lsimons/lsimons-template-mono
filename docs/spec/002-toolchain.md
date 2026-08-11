@@ -14,9 +14,10 @@ and CI.
   (`py:lint`, `rs:test`, …) with top-level fan-outs (`lint`, `test`,
   `ci`, …) that `depends = [...]` on the namespaced ones.
 - Native per-language pin files stay authoritative (`.nvmrc`,
-  `pyproject.toml` `requires-python`, `go.mod` `go` directive). mise
-  reads them, so native tools still work for contributors without
-  mise. Rust is the exception — see below.
+  `package.json` `packageManager`, `pyproject.toml` `requires-python`,
+  `go.work` / `go.mod` `go` directive). mise reads them, so native tools
+  still work for contributors without mise, and they must agree with
+  `.mise.toml`. Rust has no native pin file — see below.
 - CI uses [`jdx/mise-action`](https://github.com/jdx/mise-action),
   SHA-pinned, to install the toolchain, then calls `mise run <task>`.
   One action replaces per-language `setup-python` / `setup-node` /
@@ -28,10 +29,18 @@ and CI.
   optional gitignored `.env`. Plaintext tokens never land on disk.
 
 **Design Approach:**
-- **Rust tracks latest stable**, no MSRV pin: `rust = "latest"` in
-  `.mise.toml`, no `rust-version` in `Cargo.toml`, no `clippy.toml`
-  msrv. Rationale: personal projects don't need to support old
-  compilers, and MSRV drift vs. the mise-managed toolchain is noise.
+- **Every tool in `[tools]` is pinned to an exact version**, python, go
+  and rust included. This is a supply-chain rule, not a stability one:
+  an upstream compromise must never arrive by auto-download, and a
+  blanket "pin everything, update mechanically with `mise up`" policy is
+  cheaper to review than per-upstream trust judgements. Nothing in
+  `[tools]` is covered by dependabot, so it must be refreshed
+  deliberately.
+- **No MSRV for Rust**, despite the exact toolchain pin: no
+  `rust-version` in `Cargo.toml`, no `clippy.toml` msrv. The two are
+  separate questions — the pin says which compiler *we* build with, an
+  MSRV would say which compilers *others* must support. Personal
+  projects don't need to support old compilers.
 - **`rustfmt` + `clippy` components are installed by an explicit CI
   step** (`rustup component add rustfmt clippy`). mise's rust plugin
   sets `RUSTUP_TOOLCHAIN`, which overrides any `rust-toolchain.toml`,

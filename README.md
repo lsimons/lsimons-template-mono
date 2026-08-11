@@ -36,27 +36,35 @@ toolchain version and exposes every repo command as a task, so
 ## Included Configuration
 
 ### Shared
-- **GitHub Actions CI** on push/PR to main, with actions pinned to
-  full-length commit SHAs (the repo setting *Require actions to be
-  pinned to a full-length commit SHA* is enabled). Uses
-  `jdx/mise-action` to install the toolchain, then `mise run <lang>:*`.
+- **GitHub Actions CI** on push/PR to main, with every action pinned to
+  a full-length commit SHA. `zizmor` enforces the pinning in CI and in
+  `mise run audit`. Uses `jdx/mise-action` to install the toolchain, then
+  `mise run <lang>:*`.
+- **Workflow linting and auditing** — `actionlint` (with `shellcheck`) and
+  `zizmor` run over `.github/`, in CI and locally via `mise run gha:lint`
+  and `mise run audit`.
 - **GitHub Pages deploy** (`.github/workflows/deploy.yml`) publishes the
   docs site to Pages on push to main. Set the Pages source to "GitHub
   Actions" (not "Deploy from a branch") in repo settings.
-- **`.mise.toml`** pins toolchain versions AND defines every repo task
-  (install / lint / format / typecheck / test / build / clean / ci,
-  with per-language `<lang>:*` namespaces)
+- **`.mise.toml`** pins every toolchain version *exactly* AND defines
+  every repo task (install / lint / format / typecheck / test / build /
+  clean / ci / audit, with per-language `<lang>:*` namespaces)
+- **`.github/dependabot.yml`** — one entry per lockfile: `uv` (uv.lock),
+  `npm` (pnpm-lock.yaml), `bun` (the docs site's bun.lock), `gomod`,
+  `cargo` and `github-actions`
 - **`docs/spec/`** for spec-driven development (see
   `docs/spec/002-toolchain.md` for the mise/CI rationale)
 
 ### Python (uv workspace)
 - Python 3.14+, uv workspace with `packages/*-py` members
-- ruff for lint + format, basedpyright strict for type checking, pytest for tests
+- ruff for lint + format, basedpyright strict for type checking, pytest
+  for tests (80% coverage floor, enforced by `mise run py:test`)
 
 ### TypeScript (pnpm workspace)
 - Node 24 LTS, native TypeScript type stripping
-- TypeScript 6.x strict (+ `erasableSyntaxOnly`, `noUncheckedIndexedAccess`,
-  `exactOptionalPropertyTypes`)
+- Strict TypeScript (+ `erasableSyntaxOnly`, `noUncheckedIndexedAccess`,
+  `exactOptionalPropertyTypes`); see `package.json` for the pinned
+  compiler version
 - Biome 2 for lint + format, Vitest 4 for tests (80% coverage threshold)
 - Root `tsconfig.base.json` that each member extends
 
@@ -65,7 +73,9 @@ toolchain version and exposes every repo command as a task, so
 - golangci-lint v2, gofumpt + goimports, `go test -race -cover`
 
 ### Rust (Cargo workspace)
-- Edition 2024, tracks latest stable Rust (no MSRV pin)
+- Edition 2024. The rust *toolchain* is pinned exactly in `.mise.toml`
+  like every other tool; that is a supply-chain pin, not an MSRV, and
+  there is still deliberately no `rust-version` in `Cargo.toml`
 - Single workspace with shared lints (`all + pedantic` warn, `unsafe_code = forbid`)
 - Release profile tuned for small binaries (thin LTO, strip, 1 codegen unit)
 - clap 4 (derive) + assert_cmd/predicates for CLI tests
@@ -93,17 +103,25 @@ lsimons-template-mono/
 │   ├── lsimons-template-go/          # Go module
 │   ├── lsimons-template-rs/          # Rust crate (lib + bin)
 │   └── lsimons-template-doc/         # Astro Starlight docs site (bun)
+├── .github/dependabot.yml            # one entry per lockfile
 ├── .golangci.yml                     # Go linter
-├── .mise.toml                        # Toolchain pin + task runner
+├── .mise.toml                        # Exact toolchain pins + task runner
 ├── .nvmrc                            # Node version pin
 ├── AGENTS.md                         # AI agent instructions
 ├── CLAUDE.md -> AGENTS.md            # Claude Code compatibility
+├── CODE_OF_CONDUCT.md
+├── CONTRIBUTING.md
+├── LICENSE                           # Apache-2.0 (no file extension)
+├── SECURITY.md                       # How to report a vulnerability
 ├── Cargo.toml                        # Rust workspace root
+├── Cargo.lock                        # never gitignore this
 ├── biome.json                        # TS lint + format
 ├── go.work                           # Go workspace
 ├── package.json                      # TS workspace root
 ├── pnpm-workspace.yaml               # pnpm workspace members
+├── pnpm-lock.yaml                    # never gitignore this
 ├── pyproject.toml                    # Python workspace root + shared config
+├── uv.lock                           # never gitignore this
 ├── rustfmt.toml                      # Rust formatter
 ├── tsconfig.base.json                # TS compiler base
 └── README.md
@@ -112,7 +130,8 @@ lsimons-template-mono/
 ## Development Commands
 
 ```bash
-# One-time: pin + install toolchains from .mise.toml
+# One-time: allow this repo's mise config, then install the toolchains
+mise trust
 mise install
 
 # Install deps (Python + TypeScript + docs)
@@ -127,6 +146,11 @@ mise run build
 
 # Full CI gate locally
 mise run ci
+
+# Workflow lint + supply-chain audit (audit needs a GitHub token:
+# `gh auth login`; it refuses to run a degraded offline audit)
+mise run gha:lint
+mise run audit
 
 # Language-scoped tasks
 mise run py:test        # uv run pytest
@@ -159,9 +183,13 @@ The language suffix in package names (`-py`, `-ts`, `-go`, `-rs`) makes
 workspace globs unambiguous and avoids collisions when one feature has
 multiple implementations. See `docs/spec/000-shared-patterns.md`.
 
+## Security
+
+See [SECURITY.md](./SECURITY.md).
+
 ## License
 
-See [LICENSE.md](./LICENSE.md).
+Apache-2.0. See [LICENSE](./LICENSE).
 
 ## Contributing
 
