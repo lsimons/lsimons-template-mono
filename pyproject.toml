@@ -48,7 +48,12 @@ python_files = ["test_*.py", "*_test.py"]
 xfail_strict = true
 
 [tool.coverage.run]
-# Measure every packages/*-py member rather than one hardcoded package.
+# `packages` (a plain directory), not the `packages/*-py/src` glob used by
+# basedpyright above: coverage.py does not expand globs in `source` — it
+# treats the pattern as a literal path, silently collects nothing, and
+# turns --cov-fail-under into a no-op. Verified. Non-Python trees under
+# `packages/` (node_modules, target, dist) are not picked up, also
+# verified.
 source = ["packages"]
 omit = ["*/tests/*"]
 
