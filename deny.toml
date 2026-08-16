@@ -1,0 +1,49 @@
+# cargo-deny: https://embarkstudios.github.io/cargo-deny/
+#
+# Run by `mise run rs:deny`, which `mise run vuln` and the `vuln` CI job
+# both call. Not part of `mise run ci`: it needs network access to fetch
+# the RustSec advisory database.
+#
+# Only `advisories` and `sources` are configured here, and `mise run
+# rs:deny` runs only those two. Run it that way rather than as a bare
+# `cargo deny check` — the bare form runs all four checks including
+# `licenses`, which has no allowlist in this file and so fails
+# immediately with `licenses FAILED`. That is a confusing first
+# encounter, and it is this config's fault rather than yours.
+#
+# `licenses` and `bans` are deliberately left off. Both need a
+# project-specific allowlist, and inheriting someone else's produces
+# spurious failures in a derived project on its first real dependency —
+# for `licenses` the allowlist is also a legal statement that nobody in
+# the derived project ever agreed to. Turn them on per project by adding
+# the relevant sections here and the check names to `rs:deny` in
+# `.mise.toml`.
+
+[advisories]
+# Fail on any crate in Cargo.lock with a RustSec advisory, and on any
+# crate whose upstream has been yanked from crates.io.
+db-urls = ["https://github.com/rustsec/advisory-db"]
+yanked = "deny"
+# `unmaintained` is a *scope selector*, not a lint level — the accepted
+# values are "all", "workspace", "transitive" and "none". Whatever is in
+# scope FAILS the check; it does not warn. So this line means: an
+# unmaintained direct dependency turns the build red, an unmaintained
+# transitive one does not.
+#
+# "workspace" is also cargo-deny's own default, so this line changes
+# nothing today. It is written out anyway so the policy is visible and
+# so a future change to the tool's default cannot alter this repo's
+# behaviour silently. Use "none" if you want unmaintained crates
+# ignored entirely; there is no value that merely warns.
+unmaintained = "workspace"
+ignore = []
+
+[sources]
+# Every dependency must come from crates.io. This is what stops a git
+# or path dependency — which has no lockfile hash and no registry
+# provenance — from entering the graph unnoticed. It is also the reason
+# this tool is kept alongside osv-scanner, which checks advisories but
+# models no source policy.
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

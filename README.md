@@ -46,12 +46,20 @@ toolchain version and exposes every repo command as a task, so
 - **GitHub Pages deploy** (`.github/workflows/deploy.yml`) publishes the
   docs site to Pages on push to main. Set the Pages source to "GitHub
   Actions" (not "Deploy from a branch") in repo settings.
+- **Dependency vulnerability scanning** — `mise run vuln` and a CI job of
+  its own: `osv-scanner` over all five lockfiles (uv, pnpm, bun, cargo,
+  gomod) plus `cargo-deny` for the crates.io-only source policy and
+  `govulncheck` for the Go toolchain. Kept out of `mise run ci` so that
+  gate stays runnable offline.
 - **`.mise.toml`** pins every toolchain version *exactly* AND defines
   every repo task (install / lint / format / typecheck / test / build /
-  clean / ci / audit, with per-language `<lang>:*` namespaces)
+  clean / ci / audit / vuln, with per-language `<lang>:*` namespaces)
 - **`.github/dependabot.yml`** — one entry per lockfile: `uv` (uv.lock),
   `npm` (pnpm-lock.yaml), `bun` (the docs site's bun.lock), `gomod`,
   `cargo` and `github-actions`
+- **Frozen installs in CI** — every workflow uses the
+  `<lang>:install-frozen` tasks, so a manifest change the lockfile does
+  not reflect fails the run instead of being re-resolved on the runner
 - **`docs/spec/`** for spec-driven development (see
   `docs/spec/002-toolchain.md` for the mise/CI rationale)
 
@@ -93,7 +101,7 @@ toolchain version and exposes every repo command as a task, so
 
 ```
 lsimons-template-mono/
-├── .github/workflows/ci.yml          # parallel jobs (py / ts / go / rs / docs)
+├── .github/workflows/ci.yml          # parallel jobs (py / ts / go / rs / docs / vuln)
 ├── .github/workflows/deploy.yml      # docs → GitHub Pages on push to main
 ├── docs/spec/                        # Feature specifications
 ├── scripts/init.py                   # Rename-to-your-project helper
@@ -115,6 +123,7 @@ lsimons-template-mono/
 ├── Cargo.toml                        # Rust workspace root
 ├── Cargo.lock                        # never gitignore this
 ├── biome.json                        # TS lint + format
+├── deny.toml                         # cargo-deny advisory + source policy
 ├── go.work                           # Go workspace
 ├── package.json                      # TS workspace root
 ├── pnpm-workspace.yaml               # pnpm workspace members
@@ -150,6 +159,10 @@ mise run ci
 # `gh auth login`; it refuses to run a degraded offline audit)
 mise run gha:lint
 mise run audit
+
+# Scan every lockfile for known vulnerabilities (network, no token)
+mise run vuln
+mise run vuln:osv       # osv-scanner alone, all five lockfiles
 
 # Language-scoped tasks
 mise run py:test        # uv run pytest

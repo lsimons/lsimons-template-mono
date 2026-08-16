@@ -29,6 +29,8 @@ toolchain), then `mise run install` (uv sync + pnpm install).
 - **Lint workflows**: `mise run gha:lint` (actionlint + shellcheck)
 - **Supply-chain audit**: `mise run audit` (zizmor over `.github/`;
   needs a GitHub token and refuses to run a degraded offline audit)
+- **Dependency vulnerability scan**: `mise run vuln` (osv-scanner over
+  all five lockfiles + cargo-deny + govulncheck; network, no token)
 
 Tasks are namespaced `<lang>:<verb>` so you can fan out at any
 granularity — e.g. `mise run py:lint`, `mise run rs:test`. The docs site
@@ -139,7 +141,24 @@ slide outputs under `public/presentations/` are committed.
   `go.sum`, the docs site's `bun.lock`) is committed and must stay in the
   tree. Each one has a matching `.github/dependabot.yml` entry; adding a
   new package manager means adding an entry, or its dependencies are
-  never updated by anything.
+  never updated by anything. `mise run vuln:osv` re-derives the lockfile
+  list from git and fails if the scanner skipped one, so a new package
+  manager that nothing scans goes red rather than quietly unscanned.
+- CI installs with the `*:install-frozen` tasks, never the plain
+  `install` ones. A manifest change the lock does not reflect must fail
+  the run, not be re-resolved on the runner — a lockfile CI is willing to
+  regenerate is not a pin. Use plain `mise run install` locally, which is
+  the task you run while deliberately changing dependencies.
+- `mise run vuln` must be clean. Note that `pnpm audit` and `bun audit`
+  each see only their own tree; `vuln` is the one that covers all five.
+  Fix a finding by moving the dependency, not by narrowing the scan.
+  Where the advisory is in a *transitive* package, neither
+  `pnpm update`/`bun update` nor dependabot will lift it — both act on
+  constraints an importer declares and leave a satisfied nested
+  resolution alone. The levers are an `overrides` block (see the docs
+  site's `package.json`) or promoting the package to an explicit
+  devDependency (see `vite` in the root `package.json`); both carry a
+  comment saying which, and why, and when to remove it.
 - GitHub Actions are pinned to full-length commit SHAs with a `# vX.Y.Z`
   comment. Pin the *commit*, not an annotated tag object: for an
   annotated tag, `refs/tags/vX.Y.Z` resolves to a tag object whose SHA is
@@ -151,6 +170,14 @@ slide outputs under `public/presentations/` are committed.
 - Every tool in `.mise.toml` is pinned to an exact version, python, go
   and rust included. Nothing there is covered by dependabot, so refresh
   it deliberately with `mise up` and read the diff.
+- `mise.lock` records a checksum per tool *per platform*, and the `aqua:`
+  and `core:` backends record all 11 from the upstream release manifest,
+  so one install covers every contributor's platform. Two entries have no
+  checksum at all: `rust` (installed via rustup, which verifies against
+  the channel manifest instead) and `go:.../govulncheck` (compiled from
+  source, authenticated by the Go checksum database). Both are real
+  controls, but they are different ones and the lockfile does not record
+  their result. See the note at the top of `.mise.toml`.
 
 ## Commit Message Convention
 

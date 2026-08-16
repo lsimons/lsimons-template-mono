@@ -24,7 +24,17 @@ mise run install  # install dependencies for every language
 ```bash
 mise run ci       # lint + typecheck + test + build, every language
 mise run audit    # zizmor supply-chain audit (needs `gh auth login`)
+mise run vuln     # scan every lockfile for known vulnerabilities
 ```
+
+`ci` is deliberately offline; `audit` and `vuln` both need network, which
+is why they are separate. CI runs all three.
+
+`mise.lock` pins a checksum for every tool on all 11 platforms, so
+`mise install` verifies what it downloads whatever you develop on. The
+two exceptions are `rust` and `govulncheck`, which are verified by rustup
+and by the Go checksum database respectively rather than by mise. If an
+install does add `mise.lock` entries, commit them.
 
 `mise run ci` is the same gate CI runs. If you touched only one language,
 `mise run <lang>:lint` / `<lang>:test` (`py`, `ts`, `go`, `rs`, `doc`)

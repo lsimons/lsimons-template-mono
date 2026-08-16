@@ -39,8 +39,11 @@ jobs:
           key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
           restore-keys: ${{ runner.os }}-uv-
 
+      # The frozen task, not `py:install`: a pyproject.toml change that
+      # uv.lock does not reflect must fail here rather than be silently
+      # re-resolved on the runner into an unreviewed version set.
       - name: Install
-        run: mise run py:install
+        run: mise run py:install-frozen
 
       - name: Lint
         run: mise run py:lint
@@ -73,8 +76,10 @@ jobs:
           key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: ${{ runner.os }}-pnpm-
 
+      # Frozen: see the Python job. A package.json change that
+      # pnpm-lock.yaml does not reflect is an error, not a re-resolve.
       - name: Install
-        run: mise run ts:install
+        run: mise run ts:install-frozen
 
       - name: Lint (Biome)
         run: mise run ts:lint
@@ -175,14 +180,44 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('packages/lsimons-template-doc/bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
 
+      # Frozen: see the Python job. A docs package.json change that
+      # bun.lock does not reflect is an error, not a re-resolve.
       - name: Install
-        run: mise run doc:install
+        run: mise run doc:install-frozen
 
       - name: Check (Astro type/content check)
         run: mise run doc:check
 
       - name: Build
         run: mise run doc:build
+
+  vuln:
+    name: Dependency vulnerability scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up mise
+        uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4
+        with:
+          install: true
+          cache: true
+
+      # Its own job rather than steps in the per-language jobs: this one
+      # fails on a newly published advisory against an unchanged tree, so
+      # it has to be able to go red without implying the code broke.
+      #
+      # Runs the same `mise run vuln` a developer runs — osv-scanner over
+      # all five lockfiles, cargo-deny for the crates.io source policy,
+      # govulncheck for the Go toolchain — so there is one definition of
+      # the check rather than two that can drift. No token needed.
+      - name: Scan every lockfile (osv-scanner + cargo-deny + govulncheck)
+        run: mise run vuln
 
   actions:
     name: GitHub Actions (lint + audit)

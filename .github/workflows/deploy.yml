@@ -40,8 +40,11 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('packages/lsimons-template-doc/bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
 
+      # Frozen, matching ci.yml: what gets published must be built from
+      # the reviewed lockfile, not from whatever a re-resolve on the
+      # runner happens to pick.
       - name: Install
-        run: mise run doc:install
+        run: mise run doc:install-frozen
 
       - name: Build
         run: mise run doc:build

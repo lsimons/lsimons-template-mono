@@ -14,6 +14,28 @@
 minimum_release_age = "7d"
 lockfile = true
 
+# What `lockfile = true` actually buys, and where it stops. mise.lock
+# records a checksum per tool *per platform*. Coverage is better than the
+# "only the platform you installed on" you might expect: the `aqua:` and
+# `core:` backends read the upstream release manifest, so one `mise
+# install` on macos-arm64 records all 11 platforms — a contributor on
+# linux-x64 is covered by a hash nobody here has ever installed against.
+#
+# Two entries have no checksum on any platform. Neither is fixed here;
+# both are documented so the "pin everything" rule below is not read as
+# a stronger guarantee than it delivers:
+#
+#   - `rust`. The `core:rust` backend shells out to rustup, which does
+#     its own verification against the channel manifest. A real control,
+#     but a different one, and mise.lock does not record its result.
+#   - `go:.../govulncheck`. Compiled from source, so there is no release
+#     binary to hash; the Go checksum database and sum.golang.org
+#     authenticate the module download instead. Same shape of answer.
+#
+# So: verified by mise for 14 of 16 tools, verified by rustup and by the
+# Go checksum database for the other two. Nothing here is unverified —
+# but only the first group is recorded in a file you can review.
+
 # Every tool is pinned to an exact version, deliberately and without
 # exception — including python, go and rust. This is a supply-chain rule,
 # not a stability one: an upstream compromise must never be
@@ -62,6 +84,28 @@ zizmor = "1.29.0"
 # whatever the host happens to have.
 actionlint = "1.7.12"
 shellcheck = "0.11.0"
+# Used by `mise run vuln:osv`. One scanner for all five ecosystems: it
+# reads uv.lock, pnpm-lock.yaml, bun.lock, Cargo.lock and go.mod, so this
+# repo does not need `pip-audit` + `pnpm audit` + `bun audit` +
+# `cargo audit` as four separately-pinned tools with four output formats.
+# Unlike zizmor there is no second version to keep in step: the CI job
+# runs the mise task through mise-action, so this pin is the only one.
+osv-scanner = "2.5.0"
+# Used by `mise run rs:deny`. osv-scanner already covers Cargo.lock
+# advisories, so this is here for the two checks it does *not* do:
+# `sources` (every crate must come from crates.io — a git or path
+# dependency has no registry provenance) and yanked-crate detection.
+# See deny.toml for why `licenses` and `bans` are deliberately off.
+"aqua:EmbarkStudios/cargo-deny" = "0.20.2"
+# Used by `mise run go:vulncheck`. Also not redundant with osv-scanner:
+# osv reads go.mod, so it sees module dependencies but never the Go
+# *toolchain*, and a Go stdlib CVE is invisible to it. govulncheck also
+# does reachability analysis, so it reports the subset actually called.
+#
+# Not in mise's registry, so it comes from the Go module proxy via the
+# `go:` backend, exact-pinned like the rest. It is compiled at install
+# time, which is the one entry here that costs more than a download.
+"go:golang.org/x/vuln/cmd/govulncheck" = "1.6.0"
 
 # Project-scoped env: load an optional .env if present (fnox-generated
 # or hand-written). Keep secrets out of git; use fnox for op:// refs.
@@ -76,6 +120,17 @@ run = "python3 scripts/init.py"
 [tasks.install]
 description = "Install all language dependencies"
 depends = ["py:install", "ts:install", "doc:install"]
+
+# The frozen counterpart, for the gate. `install` stays unfrozen because
+# that is the task you run while deliberately changing dependencies and
+# it is allowed to rewrite the lock; this one is what CI calls, so a
+# manifest edit that the committed lock does not reflect is an error
+# instead of a silent re-resolve on the runner. A lockfile CI is willing
+# to regenerate is not a pin, which would undercut every other pinning
+# rule in this file.
+[tasks."install-frozen"]
+description = "Install all language dependencies, failing on a stale lock"
+depends = ["py:install-frozen", "ts:install-frozen", "doc:install-frozen"]
 
 [tasks.lint]
 description = "Run all linters"
@@ -116,8 +171,12 @@ find . -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
 
 # ---------- Python ----------
 [tasks."py:install"]
-description = "uv sync"
+description = "uv sync; may update uv.lock"
 run = "uv sync --all-groups --all-packages"
+
+[tasks."py:install-frozen"]
+description = "uv sync, failing on a stale uv.lock"
+run = "uv sync --all-groups --all-packages --locked"
 
 [tasks."py:lint"]
 run = ["uv run ruff check .", "uv run ruff format --check ."]
@@ -133,8 +192,12 @@ run = "uv run pytest"
 
 # ---------- TypeScript ----------
 [tasks."ts:install"]
-description = "pnpm install"
+description = "pnpm install; may update pnpm-lock.yaml"
 run = "pnpm install"
+
+[tasks."ts:install-frozen"]
+description = "pnpm install, failing on a stale pnpm-lock.yaml"
+run = "pnpm install --frozen-lockfile"
 
 [tasks."ts:lint"]
 # biome check runs from the workspace root (root package.json "lint" script)
@@ -192,6 +255,22 @@ for m in packages/*-go; do
 done
 """
 
+# Run by `mise run vuln`, not by `go:lint` — it needs network access.
+# Complements the osv-scanner pass rather than duplicating it: osv reads
+# go.mod, so it never sees the Go *toolchain*, and a stdlib CVE is
+# invisible to it. govulncheck checks both, and does reachability
+# analysis, so it reports only the vulnerabilities actually called.
+[tasks."go:vulncheck"]
+description = "govulncheck over every Go module (stdlib + deps, reachability-aware)"
+run = """
+set -e
+for m in packages/*-go; do
+  [ -d "$m" ] || continue
+  echo "--- govulncheck $m"
+  (cd "$m" && govulncheck ./...)
+done
+"""
+
 [tasks."go:build"]
 run = """
 set -e
@@ -231,6 +310,21 @@ run = "cargo build --workspace --all-targets"
 
 # CI ran this as a bare `cargo doc` step, so `mise run ci` was a weaker
 # gate than the workflow. Same command, reachable both ways.
+# Run by `mise run vuln`, not by `rs:lint` — it needs network access to
+# fetch the RustSec advisory database. Only `advisories` and `sources`
+# are configured in deny.toml, and only those two are run; a bare
+# `cargo deny check` would also run `licenses`, which has no allowlist
+# here and fails immediately. See deny.toml for why.
+#
+# The advisories half overlaps osv-scanner's Cargo.lock pass. It is kept
+# anyway for the `sources` policy — every crate must come from crates.io,
+# which is what stops a git or path dependency with no registry
+# provenance from entering the graph — and for yanked-crate detection,
+# which OSV does not model.
+[tasks."rs:deny"]
+description = "cargo-deny: RustSec advisories + crates.io-only source policy"
+run = "cargo-deny --all-features check advisories sources"
+
 [tasks."rs:doc"]
 description = "cargo doc with warnings denied"
 env = { RUSTFLAGS = "-D warnings", RUSTDOCFLAGS = "-D warnings" }
@@ -289,13 +383,78 @@ unset GH_TOKEN GITHUB_TOKEN
 zizmor --github-token "$token" --collect=all --strict-collection .github
 """
 
+# ---------- Dependency vulnerability scanning ----------
+# Umbrella for the three scanners. Deliberately NOT part of `ci`, for the
+# same reason `audit` is not: every one of these queries a remote
+# vulnerability database, and `ci` is meant to stay runnable offline. CI
+# enforces this in its own `vuln` job instead, which also means a newly
+# published advisory against an unchanged tree can turn that job red
+# without implying the code broke.
+#
+# Unlike `audit` none of these needs a token, and all three fail loudly
+# when the database is unreachable — so there is no silent-downgrade case
+# to guard against here.
+[tasks.vuln]
+description = "Scan every lockfile for known vulnerabilities (network; not part of `ci`)"
+depends = ["vuln:osv", "rs:deny", "go:vulncheck"]
+
+# osv-scanner reads all five of this repo's lockfiles — uv.lock,
+# pnpm-lock.yaml, bun.lock, Cargo.lock, go.mod — against the OSV
+# database, which aggregates GHSA, RustSec, PyPA and the Go vuln DB. One
+# tool instead of `pip-audit` + `pnpm audit` + `bun audit` + a cargo
+# advisory scanner.
+#
+# `-r` is load-bearing and easy to lose: `osv-scanner scan source` is NOT
+# recursive by default. Without it the walk stops at the top level, finds
+# only the three root-level locks, and reports "No issues found" having
+# never opened bun.lock or go.mod — a pass that silently covers 60% of
+# the tree. `.gitignore` is still honoured, so node_modules, .venv and
+# target stay out.
+#
+# Because that failure is silent, the scan is not trusted on its own: the
+# loop below re-derives the lockfile list from git and fails if the
+# scanner did not report opening every one. That also enforces the
+# AGENTS.md rule that a new package manager means a new lockfile — add
+# one without teaching osv-scanner about it and this goes red rather than
+# quietly scanning four fifths of the dependencies.
+[tasks."vuln:osv"]
+description = "osv-scanner over every committed lockfile"
+run = '''
+set -eu
+status=0
+out=$(osv-scanner scan source -r . 2>&1) || status=$?
+echo "$out"
+
+missing=0
+for lock in $(git ls-files -- '*uv.lock' '*pnpm-lock.yaml' '*Cargo.lock' '*bun.lock' '*go.mod'); do
+  case "$out" in
+    *"/$lock file and found"*) ;;
+    *)
+      echo "osv-scanner never opened $lock — its dependencies went unscanned." >&2
+      missing=1
+      ;;
+  esac
+done
+if [ "$missing" -ne 0 ]; then
+  echo "Every committed lockfile must be scanned. Check that osv-scanner" >&2
+  echo "supports its format, and that the -r flag is still present." >&2
+  exit 1
+fi
+exit "$status"
+'''
+
 # ---------- Docs (Astro Starlight + Quarto) ----------
 # The docs site is a bun project under packages/lsimons-template-doc; it is
 # intentionally NOT a pnpm workspace member (pnpm globs `packages/*-ts`).
 [tasks."doc:install"]
-description = "Install the docs site dependencies (bun)"
+description = "Install the docs site dependencies (bun); may update bun.lock"
 dir = "packages/lsimons-template-doc"
 run = "bun install"
+
+[tasks."doc:install-frozen"]
+description = "Install the docs site dependencies, failing on a stale bun.lock"
+dir = "packages/lsimons-template-doc"
+run = "bun install --frozen-lockfile"
 
 [tasks."doc:dev"]
 description = "Start the live-reloading docs dev server"
