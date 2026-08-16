@@ -34,7 +34,7 @@ is why they are separate. CI runs all three.
 `mise install` verifies what it downloads whatever you develop on. The
 two exceptions are `rust` and `govulncheck`, which are verified by rustup
 and by the Go checksum database respectively rather than by mise. If an
-install does add `mise.lock` entries, commit them.
+install does add or change `mise.lock` entries, commit them.
 
 `mise run ci` is the same gate CI runs. If you touched only one language,
 `mise run <lang>:lint` / `<lang>:test` (`py`, `ts`, `go`, `rs`, `doc`)

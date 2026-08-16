@@ -15,11 +15,17 @@ minimum_release_age = "7d"
 lockfile = true
 
 # What `lockfile = true` actually buys, and where it stops. mise.lock
-# records a checksum per tool *per platform*. Coverage is better than the
-# "only the platform you installed on" you might expect: the `aqua:` and
-# `core:` backends read the upstream release manifest, so one `mise
-# install` on macos-arm64 records all 11 platforms — a contributor on
-# linux-x64 is covered by a hash nobody here has ever installed against.
+# records a checksum per tool *per platform*, and in this repo that means
+# all 11 — including linux-x64-musl and windows-x64, which nobody here
+# has ever installed on. Verified by deleting an entry and reinstalling:
+# a single macos-arm64 install rewrote all 11.
+#
+# Do not generalise that. The same tool, version and mise in
+# lsimons-template-rs records only 2 (linux-x64 and macos-arm64), so the
+# breadth is a property of this repo's tool set — probably the union of
+# platforms the `core:` backends for bun/node/python/go enumerate — and
+# not a guarantee mise makes. If the tool list here shrinks, check that
+# coverage did not shrink with it.
 #
 # Two entries have no checksum on any platform. Neither is fixed here;
 # both are documented so the "pin everything" rule below is not read as

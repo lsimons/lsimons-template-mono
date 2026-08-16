@@ -170,11 +170,12 @@ slide outputs under `public/presentations/` are committed.
 - Every tool in `.mise.toml` is pinned to an exact version, python, go
   and rust included. Nothing there is covered by dependabot, so refresh
   it deliberately with `mise up` and read the diff.
-- `mise.lock` records a checksum per tool *per platform*, and the `aqua:`
-  and `core:` backends record all 11 from the upstream release manifest,
-  so one install covers every contributor's platform. Two entries have no
-  checksum at all: `rust` (installed via rustup, which verifies against
-  the channel manifest instead) and `go:.../govulncheck` (compiled from
+- `mise.lock` records a checksum per tool *per platform* — all 11 in this
+  repo, verified, so a contributor on any platform is covered. That
+  breadth comes from this repo's tool set, not from mise: the same tool
+  in `lsimons-template-rs` records only 2. Two entries have no checksum
+  at all: `rust` (installed via rustup, which verifies against the
+  channel manifest instead) and `go:.../govulncheck` (compiled from
   source, authenticated by the Go checksum database). Both are real
   controls, but they are different ones and the lockfile does not record
   their result. See the note at the top of `.mise.toml`.
