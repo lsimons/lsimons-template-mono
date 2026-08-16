@@ -82,8 +82,9 @@ toolchain version and exposes every repo command as a task, so
 
 ### Rust (Cargo workspace)
 - Edition 2024. The rust *toolchain* is pinned exactly in `.mise.toml`
-  like every other tool; that is a supply-chain pin, not an MSRV, and
-  there is still deliberately no `rust-version` in `Cargo.toml`
+  like every other tool; that is a supply-chain pin, not an MSRV. There
+  is deliberately no `rust-version` — it would cap dependency resolution
+  at a version that goes stale independently of the toolchain pin
 - Single workspace with shared lints (`all + pedantic` warn, `unsafe_code = forbid`)
 - Release profile tuned for small binaries (thin LTO, strip, 1 codegen unit)
 - clap 4 (derive) + assert_cmd/predicates for CLI tests

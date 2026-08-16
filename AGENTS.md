@@ -74,8 +74,12 @@ by NodeNext + native stripping).
 **Go:** `gofumpt`-formatted, `goimports`-clean; `go vet` and
 `golangci-lint run` at zero issues; table-driven stdlib tests.
 
-**Rust:** edition 2024, no `rust-version`; `cargo clippy -- -D warnings`
-clean (`all` + `pedantic`); `unsafe_code = "forbid"`.
+**Rust:** edition 2024; `cargo clippy -- -D warnings` clean (`all` +
+`pedantic`); `unsafe_code = "forbid"`. No `rust-version`: resolver 3 caps
+dependency resolution at a rustc version either way, and omitting it
+makes that cap track the toolchain pin rather than go stale. Declare one
+only when publishing a library, together with a CI job that builds with
+it.
 
 **Docs:** `mise run doc:check` and `doc:build` must pass. Pages live in
 `src/content/docs/` and need a `title`; write links and images

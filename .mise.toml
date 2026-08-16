@@ -50,7 +50,13 @@ lockfile = true
 # upstreams are trustworthy enough to float.
 #
 # Pinning the rust *toolchain* here is not an MSRV declaration; there is
-# still deliberately no `rust-version` in Cargo.toml.
+# still deliberately no `rust-version` in Cargo.toml. Under resolver 3
+# cargo caps dependency resolution at a rustc version either way, so the
+# choice is only which: a declared MSRV goes stale on its own schedule
+# and silently holds dependencies back, while the absence of one caps at
+# the installed toolchain — this pin — so bumping it here unlocks
+# dependency updates in the same step. Verified with `cargo update
+# --dry-run`, which names the version it is resolving against.
 #
 # The cost is that nothing here is covered by dependabot, so these go
 # stale silently. Refresh them deliberately with `mise up`, and read the
