@@ -10,6 +10,10 @@
 # still use the native tools directly. If both are present, they must
 # agree. There is no `rust-toolchain.toml`: rust is pinned here only.
 
+[settings]
+minimum_release_age = "7d"
+lockfile = true
+
 # Every tool is pinned to an exact version, deliberately and without
 # exception — including python, go and rust. This is a supply-chain rule,
 # not a stability one: an upstream compromise must never be
@@ -37,18 +41,18 @@
 # version from `mise ls-remote`; that is a local mise setting, not this
 # repo's policy.
 [tools]
-node = "24.19.0"
-pnpm = "10.34.5"
-python = "3.14.6"
+node = "26.7.0"
+pnpm = "11.20.0"
+python = "3.14.7"
 rust = "1.97.1"
 go = "1.26.5"
-uv = "0.12.2"
+uv = "0.12.3"
 golangci-lint = "2.12.2"
 gofumpt = "0.11.0"
 # Docs site (packages/lsimons-template-doc): Astro Starlight builds with bun,
 # Quarto renders the slide decks.
 bun = "1.3.14"
-"aqua:quarto-dev/quarto-cli" = "1.8.27"
+"aqua:quarto-dev/quarto-cli" = "1.10.18"
 # Used by `mise run audit`; must match `version:` on the workflow's
 # zizmor step. Bump them together.
 zizmor = "1.29.0"
