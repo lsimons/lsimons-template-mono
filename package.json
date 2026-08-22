@@ -24,7 +24,7 @@
         "pin. Keep the range inside vitest's peer range (^8.0.0 today)."
     ],
     "devDependencies": {
-        "@biomejs/biome": "^2.5.7",
+        "@biomejs/biome": "^2.5.8",
         "@types/node": "^26.2.0",
         "@vitest/coverage-v8": "^4.1.10",
         "typescript": "^7.0.2",
