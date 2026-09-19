@@ -28,11 +28,16 @@
     "range has moved past the floor and `bun audit` stays clean without it.",
     "GHSA-2v37-7h3g-55p8, GHSA-5p4m-2wfm-xmqj, GHSA-7p8r-x3mc-p8w7.",
     "The fast-uri floor is 3.1.6 for GHSA-5jgf-p345-68v8, GHSA-f65p-4m7j-42xc,",
-    "GHSA-fph4-wmhf-6fwf and GHSA-jqff-g426-hqxp."
+    "GHSA-fph4-wmhf-6fwf and GHSA-jqff-g426-hqxp.",
+    "The js-yaml floor is 4.3.2 for GHSA-2883-xcg3-v3hh. devalue 5.x (astro)",
+    "is floored at 5.9.2 for GHSA-9rgm-9g3h-6x36; svgo 4.x (astro) at 4.1.0",
+    "for GHSA-4vpr-x523-8j87 and GHSA-w27v-7q3p-w38r."
   ],
   "overrides": {
+    "devalue": "^5.9.2",
     "fast-uri": "^3.1.6",
-    "js-yaml": "^4.3.1",
-    "nanoid": "^3.3.18"
+    "js-yaml": "^4.3.2",
+    "nanoid": "^3.3.18",
+    "svgo": "^4.1.0"
   }
 }
