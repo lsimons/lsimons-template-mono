@@ -6,7 +6,7 @@
     "engines": {
         "node": ">=24"
     },
-    "packageManager": "pnpm@12.4.1",
+    "packageManager": "pnpm@12.15.0",
     "scripts": {
         "lint": "biome check .",
         "lint:fix": "biome check --write .",
@@ -24,11 +24,11 @@
         "pin. Keep the range inside vitest's peer range (^8.0.0 today)."
     ],
     "devDependencies": {
-        "@biomejs/biome": "2.5.15",
-        "@types/node": "26.6.4",
-        "@vitest/coverage-v8": "5.0.0",
+        "@biomejs/biome": "2.6.2",
+        "@types/node": "26.6.5",
+        "@vitest/coverage-v8": "5.0.5",
         "typescript": "7.0.2",
-        "vite": "8.3.2",
-        "vitest": "5.0.0"
+        "vite": "8.3.5",
+        "vitest": "5.0.5"
     }
 }
