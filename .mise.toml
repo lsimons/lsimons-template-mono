@@ -75,21 +75,21 @@ lockfile = true
 # version from `mise ls-remote`; that is a local mise setting, not this
 # repo's policy.
 [tools]
-node = "26.8.2"
-pnpm = "12.4.1"
-python = "3.14.7"
-rust = "1.98.1"
-go = "1.27.1"
-uv = "0.12.13"
-golangci-lint = "2.13.2"
+node = "26.12.1"
+pnpm = "12.15.0"
+python = "3.15.1"
+rust = "1.99.1"
+go = "1.27.3"
+uv = "0.13.5"
+golangci-lint = "2.15.0"
 gofumpt = "0.12.0"
 # Docs site (packages/lsimons-template-doc): Astro Starlight builds with bun,
 # Quarto renders the slide decks.
-bun = "1.4.2"
-"aqua:quarto-dev/quarto-cli" = "1.10.18"
+bun = "1.4.4"
+"aqua:quarto-dev/quarto-cli" = "1.10.19"
 # Used by `mise run audit`; must match `version:` on the workflow's
 # zizmor step. Bump them together.
-zizmor = "1.30.1"
+zizmor = "1.31.1"
 # Used by `mise run gha:lint`. actionlint shells out to shellcheck for
 # the `run:` blocks in workflows, and silently skips that half if
 # shellcheck is missing, so it is pinned here too rather than left to
@@ -102,6 +102,12 @@ shellcheck = "0.11.0"
 # `cargo audit` as four separately-pinned tools with four output formats.
 # Unlike zizmor there is no second version to keep in step: the CI job
 # runs the mise task through mise-action, so this pin is the only one.
+#
+# Held at 2.5.1 (2.7.0 is out): mise 2026.10.x skips SLSA for this aqua
+# package ("Aqua registry has no expected signer identity"), so re-locking
+# any version — 2.5.1 included — drops the `provenance.slsa` entries in
+# mise.lock and mise refuses that as a provenance downgrade. Bump once
+# the aqua registry entry carries a signer identity again.
 osv-scanner = "2.5.1"
 # Used by `mise run rs:deny`. osv-scanner already covers Cargo.lock
 # advisories, so this is here for the two checks it does *not* do:
@@ -117,7 +123,7 @@ osv-scanner = "2.5.1"
 # Not in mise's registry, so it comes from the Go module proxy via the
 # `go:` backend, exact-pinned like the rest. It is compiled at install
 # time, which is the one entry here that costs more than a download.
-"go:golang.org/x/vuln/cmd/govulncheck" = "1.8.0"
+"go:golang.org/x/vuln/cmd/govulncheck" = "1.9.0"
 
 # Project-scoped env: load an optional .env if present (fnox-generated
 # or hand-written). Keep secrets out of git; use fnox for op:// refs.
