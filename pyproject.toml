@@ -7,7 +7,7 @@
 name = "lsimons-template-workspace"
 version = "0.0.0"
 description = "Workspace root for lsimons-template"
-requires-python = ">=3.14"
+requires-python = ">=3.15"
 # Root package has no runtime deps; members declare their own.
 
 [tool.uv.workspace]
@@ -17,13 +17,13 @@ members = ["packages/*-py"]
 dev = [
     "pytest==9.1.1",
     "pytest-cov==7.1.0",
-    "ruff==0.16.10",
-    "basedpyright==1.40.1",
+    "ruff==0.17.2",
+    "basedpyright==1.40.2",
 ]
 
 [tool.ruff]
 line-length = 100
-target-version = "py314"
+target-version = "py315"
 extend-exclude = ["packages/*-ts", "packages/*-go", "packages/*-rs", "packages/*-doc"]
 
 [tool.ruff.lint]
@@ -33,7 +33,7 @@ select = ["E", "F", "I", "W", "UP", "B", "SIM"]
 known-first-party = ["lsimons_template"]
 
 [tool.basedpyright]
-pythonVersion = "3.14"
+pythonVersion = "3.15"
 typeCheckingMode = "strict"
 include = ["packages/*-py/src", "packages/*-py/tests"]
 

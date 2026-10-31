@@ -64,7 +64,7 @@ toolchain version and exposes every repo command as a task, so
   `docs/spec/002-toolchain.md` for the mise/CI rationale)
 
 ### Python (uv workspace)
-- Python 3.14+, uv workspace with `packages/*-py` members
+- Python 3.15+, uv workspace with `packages/*-py` members
 - ruff for lint + format, basedpyright strict for type checking, pytest
   for tests (80% coverage floor, enforced by `mise run py:test`)
 
