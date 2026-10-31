@@ -2,14 +2,14 @@
 # setuptools >= 77 is what PEP 639 `license = "<SPDX>"` needs. Modern
 # setuptools vendors the wheel builder, so `wheel` is not a build
 # requirement.
-requires = ["setuptools==84.0.0"]
+requires = ["setuptools==84.2.1"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "lsimons-template-py"
 version = "0.1.0"
 description = "Brief project description (Python)"
-requires-python = ">=3.14"
+requires-python = ">=3.15"
 # PEP 639 SPDX expression. There is deliberately no `license-files`: the
 # Apache-2.0 text lives in the monorepo root `LICENSE`, outside this
 # package directory, so setuptools cannot include it in the sdist.
