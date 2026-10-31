@@ -11,14 +11,14 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/markdown-remark": "7.3.1",
-    "@astrojs/starlight": "0.42.5",
-    "astro": "7.3.5",
+    "@astrojs/markdown-remark": "7.3.4",
+    "@astrojs/starlight": "0.42.7",
+    "astro": "7.4.2",
     "sharp": "0.35.5"
   },
   "devDependencies": {
-    "@astrojs/check": "0.9.10",
-    "playwright": "1.63.0",
+    "@astrojs/check": "0.9.12",
+    "playwright": "1.64.1",
     "typescript": "6.0.3"
   },
   "comment:overrides": [
@@ -37,12 +37,12 @@
     "4.x (astro) is floored at 4.3.0 for GHSA-ch52-4w7c-c8xp (OSV lists 4.2.0 as",
     "last affected, no fixed version). smol-toml 1.x (astro) at 1.9.0 for",
     "GHSA-r4xh-jqrq-34v2; source-map-js 1.x (postcss, css-tree, magicast) at",
-    "1.2.2 for GHSA-68fv-2mgg-jv7q. postcss-selector-parser is NOT floored: its",
-    "fix is 7.x and postcss-nested 6.x requires ^6; see osv-scanner.toml."
+    "1.2.2 for GHSA-68fv-2mgg-jv7q. fast-uri is raised to 3.1.9 for GHSA-333x-w4r6-6crp,",
+    "GHSA-w74x-v6f9-j3xg, GHSA-wjr9-j795-jxcr and GHSA-xhq7-xmqj-769h."
   ],
   "overrides": {
     "devalue": "^5.9.2",
-    "fast-uri": "^3.1.8",
+    "fast-uri": "^3.1.9",
     "http-cache-semantics": "^4.3.0",
     "js-yaml": "^4.3.2",
     "nanoid": "^3.3.18",
