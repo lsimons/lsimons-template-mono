@@ -18,7 +18,7 @@
     },
     "comment:vite": [
         "vite is an *optional peer* of vitest, so pnpm auto-installs it and",
-        "neither `pnpm update` nor dependabot can see or bump it — the lock",
+        "neither `pnpm update` nor Dependabot could see or bump it — the lock",
         "sat on a version with GHSA-fx2h-pf6j-xcff and GHSA-v6wh-96g9-6wx3",
         "with no way to move it. Declaring it explicitly makes it a managed",
         "pin. Keep the range inside vitest's peer range (^8.0.0 today)."

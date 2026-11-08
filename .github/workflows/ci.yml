@@ -254,11 +254,12 @@ jobs:
           # The action's own defaults are version "latest", collect
           # "default" and inputs ".". Pin the version so a zizmor release
           # cannot turn CI red on its own, and set collect: all so
-          # .github/dependabot.yml is audited too. Scope inputs to
+          # nothing zizmor can audit is skipped. Scope inputs to
           # .github because --collect=all otherwise walks node_modules
           # once the docs site is installed. All three must match
-          # `mise run audit` for that task to be a real local mirror —
-          # bump the version in both places together.
+          # `mise run audit` for that task to be a real local mirror.
+          # Renovate bumps both this version and the mise `zizmor` pin,
+          # with the same 7-day wait, so they land in the same PR.
           version: "1.31.1"
           collect: all
           inputs: .github

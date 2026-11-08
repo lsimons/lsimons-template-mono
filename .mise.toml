@@ -58,22 +58,21 @@ lockfile = true
 # dependency updates in the same step. Verified with `cargo update
 # --dry-run`, which names the version it is resolving against.
 #
-# The cost is that nothing here is covered by dependabot, so these go
-# stale silently. Refresh them deliberately with `mise up`, and read the
-# diff. Keep the native pin files in step when you do: `.nvmrc` (node),
-# `package.json` `packageManager` (pnpm), `go.work` (go),
-# `pyproject.toml` `requires-python` (python). They are exact too, so
-# "they must agree" is literally checkable.
+# Renovate's `mise` manager keeps these pins (and mise.lock) current,
+# so they are updated mechanically like any other dependency, after
+# Renovate's 7-day minimumReleaseAge and through the same CI gate.
+# Renovate also updates the native pin files: `.nvmrc` (node),
+# `package.json` `packageManager` (pnpm) and go.mod's `toolchain` (go).
+# Non-major bumps all land in one grouped PR, so these move in step, and
+# a major lands in one PR per tool across all its files. Renovate does NOT
+# touch the `go` line in `go.work` / go.mod or `requires-python` in
+# `pyproject.toml`, which are floors, so raise those by hand. `mise up`
+# still works for a deliberate out-of-band bump; read the diff.
 #
-# The 7-day cooldown this repo applies to *dependencies*
-# (`dependabot.yml` cooldown, `pnpm-workspace.yaml` minimumReleaseAge,
-# `pyproject.toml` exclude-newer) is deliberately NOT applied here.
-# Tool versions are chosen by a human reading a changelog, not resolved
-# automatically, so the risk the cooldown mitigates — picking up a
-# freshly-published bad release without anyone looking — does not apply
-# in the same way. mise's own `minimum_release_age` may still hide a
-# version from `mise ls-remote`; that is a local mise setting, not this
-# repo's policy.
+# The 7-day cooldown applies here as it does to dependencies (Renovate's
+# minimumReleaseAge, `pnpm-workspace.yaml` minimumReleaseAge,
+# `pyproject.toml` exclude-newer). mise's own `minimum_release_age` in
+# [settings] above may also hide a younger version from `mise ls-remote`.
 [tools]
 node = "26.13.0"
 pnpm = "12.17.0"
@@ -88,7 +87,8 @@ gofumpt = "0.12.0"
 bun = "1.4.4"
 "aqua:quarto-dev/quarto-cli" = "1.11.9"
 # Used by `mise run audit`; must match `version:` on the workflow's
-# zizmor step. Bump them together.
+# zizmor step. Renovate bumps both in the same PR (see the comment on
+# that step).
 zizmor = "1.31.1"
 # Used by `mise run gha:lint`. actionlint shells out to shellcheck for
 # the `run:` blocks in workflows, and silently skips that half if
@@ -117,8 +117,9 @@ shellcheck = "0.11.0"
 # provenance verification failed": re-check goreleaser.yml at the new
 # release tag and update the identity here, rather than dropping it.
 #
-# `auto git-mise-upgrade` may not bump inline-table pins like this one yet
-# (a separate lsimons-auto change is in progress), so bump it by hand.
+# Renovate bumps `version` in this inline table like any other pin. It
+# does not know about the signer identity: if its PR fails at `mise lock`,
+# update the identity as described above.
 osv-scanner = { version = "2.7.0", slsa_signer_identity = "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v2.1.0", slsa_signer_issuer = "https://token.actions.githubusercontent.com" }
 # Used by `mise run rs:deny`. osv-scanner already covers Cargo.lock
 # advisories, so this is here for the two checks it does *not* do:
@@ -385,8 +386,8 @@ run = "actionlint"
 # Scoped to `.github` rather than `.` on purpose: `--collect=all` walks
 # the whole tree, and the docs site's `node_modules` ships third-party
 # workflows that are not ours to fix. Nothing is lost — there is no
-# `action.yml` anywhere outside `.github`, and workflows, actions and
-# dependabot config are the only things zizmor audits. `inputs:` on the
+# `action.yml` anywhere outside `.github`, and workflows and actions are
+# the only things zizmor audits here. `inputs:` on the
 # CI zizmor step is set to the same path so the two stay identical.
 #
 # One deliberate asymmetry: `--strict-collection` has no `zizmor-action`
@@ -402,7 +403,7 @@ run = "actionlint"
 # check below. An already-exported non-empty token is used as-is, so this
 # also works where `gh` is not installed at all.
 [tasks.audit]
-description = "zizmor audit of GitHub Actions workflows + dependabot config"
+description = "zizmor audit of GitHub Actions workflows"
 run = """
 set -e
 token="${GH_TOKEN:-}"

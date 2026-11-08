@@ -1,0 +1,18 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": ["local>lsimons/.github:renovate-config"],
+    "packageRules": [
+        {
+            "description": "The docs site's bun `overrides` are hand-maintained security floors on the major their consumers already require (see comment:overrides in its package.json). Pinning them or moving them to a new major (e.g. nanoid 4+ is ESM-only and breaks postcss) would change their meaning; the ^ ranges already let lock updates pick up newer patches.",
+            "matchManagers": ["bun"],
+            "matchDepTypes": ["overrides"],
+            "enabled": false
+        },
+        {
+            "description": "vite is declared only to make vitest's optional peer a managed pin, and must stay inside vitest's peer range (see comment:vite in package.json). pnpm only warns on a peer mismatch, so CI would pass; hold vite majors for a human to check that range.",
+            "matchPackageNames": ["vite"],
+            "matchUpdateTypes": ["major"],
+            "automerge": false
+        }
+    ]
+}

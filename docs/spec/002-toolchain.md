@@ -32,10 +32,10 @@ and CI.
 - **Every tool in `[tools]` is pinned to an exact version**, python, go
   and rust included. This is a supply-chain rule, not a stability one:
   an upstream compromise must never arrive by auto-download, and a
-  blanket "pin everything, update mechanically with `mise up`" policy is
-  cheaper to review than per-upstream trust judgements. Nothing in
-  `[tools]` is covered by dependabot, so it must be refreshed
-  deliberately.
+  blanket "pin everything, update mechanically" policy is cheaper to
+  review than per-upstream trust judgements. Renovate's `mise` manager
+  keeps `[tools]` and `mise.lock` current, with the same 7-day
+  minimumReleaseAge and CI gate as every other dependency.
 - **No MSRV for Rust**, despite the exact toolchain pin: no
   `rust-version` in `Cargo.toml`, no `clippy.toml` msrv. The two are
   separate questions — the pin says which compiler *we* build with, an

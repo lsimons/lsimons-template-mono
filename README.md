@@ -54,9 +54,13 @@ toolchain version and exposes every repo command as a task, so
 - **`.mise.toml`** pins every toolchain version *exactly* AND defines
   every repo task (install / lint / format / typecheck / test / build /
   clean / ci / audit / vuln, with per-language `<lang>:*` namespaces)
-- **`.github/dependabot.yml`** — one entry per lockfile: `uv` (uv.lock),
-  `npm` (pnpm-lock.yaml), `bun` (the docs site's bun.lock), `gomod`,
-  `cargo` and `github-actions`
+- **`renovate.json`** — opts into the shared Renovate preset in
+  [lsimons/.github](https://github.com/lsimons/.github).
+  Renovate finds every manifest and lockfile on its own (uv, pnpm, the
+  docs site's bun.lock, gomod, cargo, GitHub Actions) and also keeps the
+  `.mise.toml` tool pins, `mise.lock`, `.nvmrc` and the `zizmor-action`
+  `version` input current. Its repo-specific rules cover the docs
+  site's `overrides` and vite majors
 - **Frozen installs in CI** — every workflow uses the
   `<lang>:install-frozen` tasks, so a manifest change the lockfile does
   not reflect fails the run instead of being re-resolved on the runner
@@ -112,7 +116,6 @@ lsimons-template-mono/
 │   ├── lsimons-template-go/          # Go module
 │   ├── lsimons-template-rs/          # Rust crate (lib + bin)
 │   └── lsimons-template-doc/         # Astro Starlight docs site (bun)
-├── .github/dependabot.yml            # one entry per lockfile
 ├── .golangci.yml                     # Go linter
 ├── .mise.toml                        # Exact toolchain pins + task runner
 ├── .nvmrc                            # Node version pin
@@ -131,6 +134,7 @@ lsimons-template-mono/
 ├── pnpm-lock.yaml                    # never gitignore this
 ├── pyproject.toml                    # Python workspace root + shared config
 ├── uv.lock                           # never gitignore this
+├── renovate.json                     # Renovate (dependency updates)
 ├── rustfmt.toml                      # Rust formatter
 ├── tsconfig.base.json                # TS compiler base
 └── README.md

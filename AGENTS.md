@@ -102,7 +102,8 @@ Quarto.
 **Supply chain:**
 
 - Every lockfile is committed: `uv.lock`, `pnpm-lock.yaml`, `Cargo.lock`,
-  `bun.lock`, each `go.sum`. Each needs a `.github/dependabot.yml` entry.
+  `bun.lock`, each `go.sum`. Renovate finds each one automatically; a
+  new package needs no config unless it needs a rule in `renovate.json`.
 - CI installs with the `*:install-frozen` tasks. Use plain
   `mise run install` when deliberately changing dependencies.
 - `mise run vuln` must be clean. Fix a finding by moving the dependency,
@@ -112,8 +113,9 @@ Quarto.
 - Pin GitHub Actions to full-length commit SHAs — the *commit*, not an
   annotated tag object. Check with
   `gh api repos/<owner>/<repo>/git/commits/<sha>`.
-- Every `.mise.toml` tool is exact-pinned and invisible to dependabot;
-  refresh with `mise up` and read the diff.
+- Every `.mise.toml` tool is exact-pinned and Renovate keeps it current
+  (with `mise.lock`). It does not raise the `go` line in `go.work` /
+  go.mod or `requires-python`; do those by hand.
 - What `mise.lock` does and does not checksum is documented at the top of
   `.mise.toml`. Read it before relying on it.
 
