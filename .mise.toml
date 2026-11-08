@@ -75,18 +75,18 @@ lockfile = true
 # version from `mise ls-remote`; that is a local mise setting, not this
 # repo's policy.
 [tools]
-node = "26.12.1"
-pnpm = "12.15.0"
-python = "3.15.1"
+node = "26.13.0"
+pnpm = "12.17.0"
+python = "3.15.2"
 rust = "1.99.1"
 go = "1.27.3"
-uv = "0.13.5"
+uv = "0.13.6"
 golangci-lint = "2.15.0"
 gofumpt = "0.12.0"
 # Docs site (packages/lsimons-template-doc): Astro Starlight builds with bun,
 # Quarto renders the slide decks.
 bun = "1.4.4"
-"aqua:quarto-dev/quarto-cli" = "1.10.19"
+"aqua:quarto-dev/quarto-cli" = "1.11.9"
 # Used by `mise run audit`; must match `version:` on the workflow's
 # zizmor step. Bump them together.
 zizmor = "1.31.1"
