@@ -75,11 +75,11 @@ lockfile = true
 # [settings] above may also hide a younger version from `mise ls-remote`.
 [tools]
 node = "26.13.0"
-pnpm = "12.17.0"
+pnpm = "12.18.0"
 python = "3.15.2"
 rust = "1.99.1"
 go = "1.27.3"
-uv = "0.13.6"
+uv = "0.13.7"
 golangci-lint = "2.15.0"
 gofumpt = "0.12.0"
 # Docs site (packages/lsimons-template-doc): Astro Starlight builds with bun,
@@ -89,7 +89,7 @@ bun = "1.4.4"
 # Used by `mise run audit`; must match `version:` on the workflow's
 # zizmor step. Renovate bumps both in the same PR (see the comment on
 # that step).
-zizmor = "1.31.1"
+zizmor = "1.32.0"
 # Used by `mise run gha:lint`. actionlint shells out to shellcheck for
 # the `run:` blocks in workflows, and silently skips that half if
 # shellcheck is missing, so it is pinned here too rather than left to
@@ -120,7 +120,7 @@ shellcheck = "0.11.0"
 # Renovate bumps `version` in this inline table like any other pin. It
 # does not know about the signer identity: if its PR fails at `mise lock`,
 # update the identity as described above.
-osv-scanner = { version = "2.7.0", slsa_signer_identity = "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v2.1.0", slsa_signer_issuer = "https://token.actions.githubusercontent.com" }
+osv-scanner = { version = "2.7.1", slsa_signer_identity = "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v2.1.0", slsa_signer_issuer = "https://token.actions.githubusercontent.com" }
 # Used by `mise run rs:deny`. osv-scanner already covers Cargo.lock
 # advisories, so this is here for the two checks it does *not* do:
 # `sources` (every crate must come from crates.io — a git or path
